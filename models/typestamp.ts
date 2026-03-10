@@ -1,7 +1,7 @@
 import { Collection } from 'mongodb'
 import { getDb } from '@/lib/mongodb'
 
-export interface Claim {
+export interface TypeStamp {
   txid: string
   hash: string
   title: string
@@ -9,17 +9,19 @@ export interface Claim {
   identityKey: string
   timestamp: number
   isPublic: boolean
+  displayName: string
+  showIdentityKey: boolean
   createdAt: Date
 }
 
-let _collection: Collection<Claim> | null = null
+let _collection: Collection<TypeStamp> | null = null
 let _indexesCreated = false
 
-export async function getClaimsCollection(): Promise<Collection<Claim>> {
+export async function getTypeStampsCollection(): Promise<Collection<TypeStamp>> {
   if (_collection && _indexesCreated) return _collection
 
   const db = await getDb()
-  _collection = db.collection<Claim>('claims')
+  _collection = db.collection<TypeStamp>('typestamps')
 
   if (!_indexesCreated) {
     await Promise.all([

@@ -16,8 +16,8 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'ClaimStamp — Timestamp Your Claims on BSV',
-  description: 'Stake a timestamped, identity-bound claim on content by recording it on the BSV blockchain.',
+  title: 'TypeStamp — Tokenize and Timestamp on BSV',
+  description: 'Create a timestamped, identity-bound typestamp on any text by recording it on the BSV blockchain.',
 }
 
 export default function RootLayout({
@@ -26,8 +26,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-gray-100`}>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark')})()`,
+          }}
+        />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-th-bg text-th-text`}>
         <WalletProvider>
           <Header />
           <main className="mx-auto max-w-5xl px-4 py-8">

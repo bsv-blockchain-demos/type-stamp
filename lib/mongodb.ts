@@ -21,7 +21,7 @@ const clientPromise = g._mongoClientPromise!
 
 export async function getDb(): Promise<Db> {
   const client = await clientPromise
-  return client.db('claimstamp')
+  return client.db('typestamp')
 }
 
 export default clientPromise

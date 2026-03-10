@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getClaimsCollection } from '@/models/claim'
+import { getTypeStampsCollection } from '@/models/typestamp'
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing hash parameter' }, { status: 400 })
     }
 
-    const collection = await getClaimsCollection()
+    const collection = await getTypeStampsCollection()
     const existing = await collection.findOne(
       { hash },
       { projection: { txid: 1 } }
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ exists: false })
   } catch (error) {
-    console.error('GET /api/claims/check error:', error)
+    console.error('GET /api/typestamps/check error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

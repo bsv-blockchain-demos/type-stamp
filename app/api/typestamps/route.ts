@@ -1,37 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getClaimsCollection, Claim } from '@/models/claim'
+import { getTypeStampsCollection, TypeStamp } from '@/models/typestamp'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { txid, hash, title, content, identityKey, timestamp } = body
+    const { txid, hash, title, content, identityKey, timestamp, displayName, showIdentityKey, isPublic } = body
 
     if (!txid || !hash || !title || !content || !identityKey || !timestamp) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const collection = await getClaimsCollection()
+    const collection = await getTypeStampsCollection()
 
     const existing = await collection.findOne({ txid })
     if (existing) {
-      return NextResponse.json({ error: 'Claim with this txid already exists' }, { status: 409 })
+      return NextResponse.json({ error: 'TypeStamp with this txid already exists' }, { status: 409 })
     }
 
-    const claim: Claim = {
+    const typestamp: TypeStamp = {
       txid,
       hash,
       title: title.slice(0, 100),
       content,
       identityKey,
       timestamp,
-      isPublic: true,
+      isPublic: isPublic !== false,
+      displayName: typeof displayName === 'string' ? displayName.trim() : '',
+      showIdentityKey: showIdentityKey === true,
       createdAt: new Date(),
     }
 
-    await collection.insertOne(claim)
+    await collection.insertOne(typestamp)
     return NextResponse.json({ success: true, txid }, { status: 201 })
   } catch (error) {
-    console.error('POST /api/claims error:', error)
+    console.error('POST /api/typestamps error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -44,11 +46,11 @@ export async function GET(req: NextRequest) {
     const limit = 20
     const skip = (page - 1) * limit
 
-    const collection = await getClaimsCollection()
+    const collection = await getTypeStampsCollection()
 
     const filter = identityKey ? { identityKey } : { isPublic: true }
 
-    const claims = await collection
+    const typestamps = await collection
       .find(filter, { projection: { content: 0 } })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -58,13 +60,13 @@ export async function GET(req: NextRequest) {
     const total = await collection.countDocuments(filter)
 
     return NextResponse.json({
-      claims,
+      typestamps,
       page,
       totalPages: Math.ceil(total / limit),
       total,
     })
   } catch (error) {
-    console.error('GET /api/claims error:', error)
+    console.error('GET /api/typestamps error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

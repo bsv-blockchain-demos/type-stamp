@@ -14,7 +14,7 @@ export function getWallet(): WalletClient {
 
 export async function getIdentityKey(): Promise<string> {
   const wallet = getWallet()
-  const protocolID: WalletProtocol = [0 as SecurityLevel, 'claimstamp']
+  const protocolID: WalletProtocol = [0 as SecurityLevel, 'typestamp']
   const result = await wallet.getPublicKey({
     protocolID,
     keyID: '1',

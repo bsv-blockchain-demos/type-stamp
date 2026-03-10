@@ -25,7 +25,7 @@ export default function ShareButtons({ txid, title }: ShareButtonsProps) {
         href={buildXShareUrl(txid, title, appUrl)}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition-colors"
+        className="text-sm bg-th-surface-alt border border-th-border hover:border-th-border-hover text-th-text-secondary hover:text-th-text px-4 py-2 rounded-lg transition-colors"
       >
         Share on X
       </a>
@@ -33,13 +33,13 @@ export default function ShareButtons({ txid, title }: ShareButtonsProps) {
         href={buildLinkedInShareUrl(txid, appUrl)}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition-colors"
+        className="text-sm bg-th-surface-alt border border-th-border hover:border-th-border-hover text-th-text-secondary hover:text-th-text px-4 py-2 rounded-lg transition-colors"
       >
         Share on LinkedIn
       </a>
       <button
         onClick={handleCopy}
-        className="text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded-lg transition-colors"
+        className="text-sm bg-th-surface-alt border border-th-border hover:border-th-border-hover text-th-text-secondary hover:text-th-text px-4 py-2 rounded-lg transition-colors"
       >
         {copied ? 'Copied!' : 'Copy Link'}
       </button>

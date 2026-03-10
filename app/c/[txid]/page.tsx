@@ -5,10 +5,10 @@ interface Props {
   params: { txid: string }
 }
 
-async function getClaim(txid: string) {
+async function getTypeStamp(txid: string) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   try {
-    const res = await fetch(`${appUrl}/api/claims/${txid}`, {
+    const res = await fetch(`${appUrl}/api/typestamps/${txid}`, {
       cache: 'no-store',
     })
     if (res.ok) return res.json()
@@ -41,38 +41,38 @@ async function getOnChainData(txid: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const claim = await getClaim(params.txid)
-  const title = claim?.title || 'ClaimStamp Certificate'
-  const description = `Verified claim on BSV blockchain — TXID: ${params.txid.slice(0, 16)}...`
+  const typestamp = await getTypeStamp(params.txid)
+  const title = typestamp?.title || 'TypeStamp Certificate'
+  const description = `Verified typestamp on BSV blockchain — TXID: ${params.txid.slice(0, 16)}...`
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   return {
-    title: `${title} — ClaimStamp`,
+    title: `${title} — TypeStamp`,
     description,
     openGraph: {
-      title: `${title} — ClaimStamp`,
+      title: `${title} — TypeStamp`,
       description,
       url: `${appUrl}/c/${params.txid}`,
-      siteName: 'ClaimStamp',
+      siteName: 'TypeStamp',
       type: 'article',
     },
     twitter: {
       card: 'summary',
-      title: `${title} — ClaimStamp`,
+      title: `${title} — TypeStamp`,
       description,
     },
   }
 }
 
 export default async function CertificatePage({ params }: Props) {
-  const claim = await getClaim(params.txid)
+  const typestamp = await getTypeStamp(params.txid)
   const { details, decoded } = await getOnChainData(params.txid)
 
   // Use DB data if available, otherwise fall back to on-chain data
-  const title = claim?.title || decoded?.title || 'Unknown Claim'
-  const content = claim?.content || undefined
-  const identityKey = claim?.identityKey || decoded?.lockingPublicKey || 'Unknown'
-  const timestamp = claim?.timestamp || (decoded?.timestamp ? parseInt(decoded.timestamp) : 0)
+  const title = typestamp?.title || decoded?.title || 'Unknown TypeStamp'
+  const content = typestamp?.content || undefined
+  const identityKey = typestamp?.identityKey || decoded?.lockingPublicKey || 'Unknown'
+  const timestamp = typestamp?.timestamp || (decoded?.timestamp ? parseInt(decoded.timestamp) : 0)
 
   return (
     <div className="max-w-2xl mx-auto">

@@ -1,6 +1,6 @@
 export function buildXShareUrl(txid: string, title: string, appUrl: string): string {
   const url = `${appUrl}/c/${txid}`
-  const text = `🔏 I just timestamped a claim on the BSV blockchain!\n\n"${title.slice(0, 80)}"\n\nVerify it: ${url}\n\n#ClaimStamp #BSV #Blockchain`
+  const text = `🔏 I just created a typestamp on the BSV blockchain!\n\n"${title.slice(0, 80)}"\n\nVerify it: ${url}\n\n#TypeStamp #BSV #Blockchain`
   return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`
 }
 

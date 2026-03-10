@@ -3,40 +3,44 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-interface ClaimSummary {
+interface TypeStampSummary {
   txid: string
   title: string
   identityKey: string
+  displayName: string
+  showIdentityKey: boolean
   timestamp: number
   createdAt: string
 }
 
 export default function PublicFeed() {
-  const [claims, setClaims] = useState<ClaimSummary[]>([])
+  const [typestamps, setTypeStamps] = useState<TypeStampSummary[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    loadClaims(page)
+    loadTypeStamps(page)
   }, [page])
 
-  const loadClaims = async (p: number) => {
+  const loadTypeStamps = async (p: number) => {
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/claims?page=${p}`)
+      const res = await fetch(`/api/typestamps?page=${p}`)
       const data = await res.json()
-      setClaims(prev => p === 1 ? data.claims : [...prev, ...data.claims])
+      setTypeStamps(data.typestamps)
       setTotalPages(data.totalPages)
+      setTotal(data.total)
     } catch (err) {
-      console.error('Failed to load claims:', err)
+      console.error('Failed to load typestamps:', err)
     } finally {
       setIsLoading(false)
     }
   }
 
-  const formatDate = (ts: number) => {
-    return new Date(ts * 1000).toLocaleDateString('en-US', {
+  const formatDateTime = (ts: number) => {
+    return new Date(ts * 1000).toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -45,49 +49,116 @@ export default function PublicFeed() {
     })
   }
 
-  if (isLoading && claims.length === 0) {
+  if (isLoading && typestamps.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
-        Loading recent claims...
+      <div className="text-center text-th-text-muted py-8">
+        Loading recent typestamps...
       </div>
     )
   }
 
-  if (claims.length === 0) {
+  if (!isLoading && typestamps.length === 0 && page === 1) {
     return (
-      <div className="text-center text-gray-500 py-8">
-        No public claims yet. Be the first!
+      <div className="text-center text-th-text-muted py-8">
+        No public typestamps yet. Be the first!
       </div>
     )
   }
+
+  const pageSize = 20
+  const startItem = (page - 1) * pageSize + 1
+  const endItem = Math.min(page * pageSize, total)
 
   return (
     <div>
-      <div className="space-y-3">
-        {claims.map(claim => (
-          <Link
-            key={claim.txid}
-            href={`/c/${claim.txid}`}
-            className="block rounded-lg border border-gray-800 bg-gray-900 p-4 hover:border-gray-700 transition-colors"
-          >
-            <h3 className="font-medium text-gray-100 truncate">{claim.title}</h3>
-            <div className="mt-1 flex items-center gap-3 text-xs text-gray-500">
-              <span className="font-mono">{claim.identityKey.slice(0, 8)}...</span>
-              <span>{formatDate(claim.timestamp)}</span>
-            </div>
-          </Link>
-        ))}
+      <div className="overflow-x-auto rounded-lg border border-th-border shadow-sm">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-th-surface text-th-text-muted text-xs uppercase tracking-wider">
+            <tr>
+              <th className="px-4 py-3">TypeStamp</th>
+              <th className="px-4 py-3 whitespace-nowrap">TXID</th>
+              <th className="px-4 py-3 whitespace-nowrap">Display Name</th>
+              <th className="px-4 py-3 whitespace-nowrap">Identity Key</th>
+              <th className="px-4 py-3 whitespace-nowrap">Created At</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-th-border">
+            {typestamps.map(ts => (
+              <tr key={ts.txid} className="bg-th-bg hover:bg-th-surface-alt transition-colors">
+                <td className="px-4 py-3 max-w-xs truncate">
+                  <Link
+                    href={`/c/${ts.txid}`}
+                    className="text-th-text hover:text-emerald-500 transition-colors"
+                  >
+                    {ts.title}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <Link
+                    href={`/c/${ts.txid}`}
+                    className="font-mono text-emerald-500 hover:text-emerald-400 transition-colors"
+                  >
+                    {ts.txid.slice(0, 8)}...
+                  </Link>
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-th-text-secondary">
+                  {ts.displayName || '\u2014'}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap font-mono text-th-text-muted">
+                  {ts.showIdentityKey
+                    ? `${ts.identityKey.slice(0, 10)}...`
+                    : 'Private'}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-th-text-muted">
+                  {formatDateTime(ts.timestamp)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {page < totalPages && (
-        <button
-          onClick={() => setPage(p => p + 1)}
-          disabled={isLoading}
-          className="mt-4 w-full text-sm text-gray-400 hover:text-white py-2 transition-colors"
-        >
-          {isLoading ? 'Loading...' : 'Load more'}
-        </button>
-      )}
+      {/* Pagination */}
+      <div className="mt-4 flex items-center justify-between text-sm">
+        <span className="text-th-text-muted">
+          {total > 0
+            ? `Showing ${startItem}\u2013${endItem} of ${total} typestamp${total !== 1 ? 's' : ''}`
+            : 'No typestamps'}
+        </span>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setPage(p => p - 1)}
+            disabled={page <= 1 || isLoading}
+            className="px-3 py-1.5 rounded-lg border border-th-border text-th-text-secondary hover:text-th-text hover:bg-th-surface-alt disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            &larr; Prev
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              disabled={isLoading}
+              className={`px-3 py-1.5 rounded-lg border transition-colors ${
+                p === page
+                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500 font-medium'
+                  : 'border-th-border text-th-text-secondary hover:text-th-text hover:bg-th-surface-alt'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setPage(p => p + 1)}
+            disabled={page >= totalPages || isLoading}
+            className="px-3 py-1.5 rounded-lg border border-th-border text-th-text-secondary hover:text-th-text hover:bg-th-surface-alt disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Next &rarr;
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

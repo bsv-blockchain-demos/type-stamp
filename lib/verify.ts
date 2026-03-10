@@ -48,7 +48,7 @@ export function decodePushDropFromTx(rawHex: string): DecodedPushDrop | null {
         const decoded = PushDrop.decode(script)
         if (decoded && decoded.fields.length >= 4) {
           const protocol = new TextDecoder().decode(new Uint8Array(decoded.fields[0]))
-          if (protocol === 'claimstamp') {
+          if (protocol === 'typestamp' || protocol === 'claimstamp') {
             return {
               protocol,
               hash: new TextDecoder().decode(new Uint8Array(decoded.fields[1])),

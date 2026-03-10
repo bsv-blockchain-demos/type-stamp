@@ -4,7 +4,7 @@ import { PushDrop } from '@bsv/sdk'
 import type { SecurityLevel, WalletProtocol } from '@bsv/sdk'
 import { getWallet, getIdentityKey } from './wallet'
 
-export interface ClaimStampResult {
+export interface TypeStampResult {
   txid: string
   hash: string
   title: string
@@ -12,21 +12,21 @@ export interface ClaimStampResult {
   identityKey: string
 }
 
-export async function createClaimStamp(
+export async function createTypeStamp(
   content: string,
   hash: string,
   title: string
-): Promise<ClaimStampResult> {
+): Promise<TypeStampResult> {
   const wallet = getWallet()
   const identityKey = await getIdentityKey()
   const timestamp = Math.floor(Date.now() / 1000)
   const keyID = Date.now().toString()
 
   const token = new PushDrop(wallet)
-  const protocolID: WalletProtocol = [0 as SecurityLevel, 'claimstamp']
+  const protocolID: WalletProtocol = [0 as SecurityLevel, 'typestamp']
 
   const fields = [
-    Array.from(new TextEncoder().encode('claimstamp')),
+    Array.from(new TextEncoder().encode('typestamp')),
     Array.from(new TextEncoder().encode(`sha256:${hash}`)),
     Array.from(new TextEncoder().encode(title.slice(0, 100))),
     Array.from(new TextEncoder().encode(timestamp.toString())),
@@ -41,13 +41,13 @@ export async function createClaimStamp(
   )
 
   const result = await wallet.createAction({
-    description: `ClaimStamp: ${title.slice(0, 50)}`,
+    description: `TypeStamp: ${title.slice(0, 50)}`,
     outputs: [
       {
         lockingScript: lockingScript.toHex(),
         satoshis: 1,
-        outputDescription: 'ClaimStamp PushDrop token',
-        basket: 'claimstamp',
+        outputDescription: 'TypeStamp PushDrop token',
+        basket: 'typestamp',
       },
     ],
     options: {

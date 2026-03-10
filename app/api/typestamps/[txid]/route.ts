@@ -1,32 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getClaimsCollection } from '@/models/claim'
+import { getTypeStampsCollection } from '@/models/typestamp'
 
 export async function GET(
   req: NextRequest,
   { params }: { params: { txid: string } }
 ) {
   try {
-    const collection = await getClaimsCollection()
-    const claim = await collection.findOne({ txid: params.txid })
+    const collection = await getTypeStampsCollection()
+    const typestamp = await collection.findOne({ txid: params.txid })
 
-    if (!claim) {
-      return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
+    if (!typestamp) {
+      return NextResponse.json({ error: 'TypeStamp not found' }, { status: 404 })
     }
 
-    // Private claims only return content if requester provides matching hash
-    if (!claim.isPublic) {
+    // Private typestamps only return content if requester provides matching hash
+    if (!typestamp.isPublic) {
       const { searchParams } = new URL(req.url)
       const hash = searchParams.get('hash')
-      if (hash !== claim.hash) {
+      if (hash !== typestamp.hash) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { content: _content, ...safe } = claim
+        const { content: _content, ...safe } = typestamp
         return NextResponse.json(safe)
       }
     }
 
-    return NextResponse.json(claim)
+    return NextResponse.json(typestamp)
   } catch (error) {
-    console.error('GET /api/claims/[txid] error:', error)
+    console.error('GET /api/typestamps/[txid] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -43,14 +43,14 @@ export async function PATCH(
       return NextResponse.json({ error: 'Missing identityKey or isPublic' }, { status: 400 })
     }
 
-    const collection = await getClaimsCollection()
-    const claim = await collection.findOne({ txid: params.txid })
+    const collection = await getTypeStampsCollection()
+    const typestamp = await collection.findOne({ txid: params.txid })
 
-    if (!claim) {
-      return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
+    if (!typestamp) {
+      return NextResponse.json({ error: 'TypeStamp not found' }, { status: 404 })
     }
 
-    if (claim.identityKey !== identityKey) {
+    if (typestamp.identityKey !== identityKey) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
@@ -61,7 +61,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true, txid: params.txid, isPublic })
   } catch (error) {
-    console.error('PATCH /api/claims/[txid] error:', error)
+    console.error('PATCH /api/typestamps/[txid] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

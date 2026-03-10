@@ -3,11 +3,28 @@
 @tailwind utilities;
 
 :root {
-  --background: #030712;
-  --foreground: #f9fafb;
+  --color-bg: 248 250 252;
+  --color-surface: 255 255 255;
+  --color-surface-alt: 241 245 249;
+  --color-border: 226 232 240;
+  --color-border-hover: 203 213 225;
+  --color-text: 15 23 42;
+  --color-text-secondary: 71 85 105;
+  --color-text-muted: 148 163 184;
+}
+
+.dark {
+  --color-bg: 3 7 18;
+  --color-surface: 17 24 39;
+  --color-surface-alt: 31 41 55;
+  --color-border: 31 41 55;
+  --color-border-hover: 55 65 81;
+  --color-text: 243 244 246;
+  --color-text-secondary: 156 163 175;
+  --color-text-muted: 107 114 128;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: rgb(var(--color-text));
+  background: rgb(var(--color-bg));
 }

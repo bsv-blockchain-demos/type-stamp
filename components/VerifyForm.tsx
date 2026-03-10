@@ -46,8 +46,8 @@ export default function VerifyForm() {
       const { decodePushDropFromTx } = await import('@/lib/verify')
       const decoded = decodePushDropFromTx(rawHex)
 
-      if (!decoded || decoded.protocol !== 'claimstamp') {
-        setError('This transaction does not contain a valid ClaimStamp.')
+      if (!decoded || (decoded.protocol !== 'typestamp' && decoded.protocol !== 'claimstamp')) {
+        setError('This transaction does not contain a valid TypeStamp.')
         return
       }
 
@@ -77,9 +77,9 @@ export default function VerifyForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleVerify} className="rounded-xl border border-gray-800 bg-gray-900 p-6 space-y-4">
+      <form onSubmit={handleVerify} className="rounded-xl border border-th-border bg-th-surface p-6 space-y-4 shadow-sm">
         <div>
-          <label htmlFor="txid" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="txid" className="block text-sm font-medium text-th-text-secondary mb-1">
             Transaction ID (TXID)
           </label>
           <input
@@ -87,14 +87,14 @@ export default function VerifyForm() {
             type="text"
             value={txid}
             onChange={e => setTxid(e.target.value)}
-            placeholder="Enter the TXID of the claim to verify..."
-            className="w-full rounded-lg bg-gray-800 border border-gray-700 text-gray-100 px-4 py-2.5 text-sm font-mono placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            placeholder="Enter the TXID of the typestamp to verify..."
+            className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm font-mono placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-shadow"
             disabled={isVerifying}
           />
         </div>
 
         <div>
-          <label htmlFor="verify-content" className="block text-sm font-medium text-gray-300 mb-1">
+          <label htmlFor="verify-content" className="block text-sm font-medium text-th-text-secondary mb-1">
             Original Content
           </label>
           <textarea
@@ -103,30 +103,30 @@ export default function VerifyForm() {
             onChange={e => setContent(e.target.value)}
             placeholder="Paste the original content to verify against the on-chain hash..."
             rows={6}
-            className="w-full rounded-lg bg-gray-800 border border-gray-700 text-gray-100 px-4 py-3 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-y"
+            className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-3 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-shadow resize-y"
             disabled={isVerifying}
           />
         </div>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
 
         <button
           type="submit"
           disabled={isVerifying || !txid.trim() || !content.trim()}
-          className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-gray-700 disabled:text-gray-500 text-white font-medium py-2.5 rounded-lg transition-colors"
+          className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 text-white font-medium py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 disabled:shadow-none"
         >
           {isVerifying ? 'Verifying...' : 'Verify'}
         </button>
       </form>
 
       {result && (
-        <div className={`rounded-xl border p-6 ${
+        <div className={`rounded-xl border p-6 shadow-sm ${
           result.match
-            ? 'border-emerald-700 bg-emerald-900/20'
-            : 'border-red-700 bg-red-900/20'
+            ? 'border-emerald-500/30 bg-emerald-500/5'
+            : 'border-red-500/30 bg-red-500/5'
         }`}>
           <h3 className={`text-lg font-semibold mb-3 ${
-            result.match ? 'text-emerald-400' : 'text-red-400'
+            result.match ? 'text-emerald-500' : 'text-red-500'
           }`}>
             {result.match ? 'Match Confirmed' : 'Mismatch Detected'}
           </h3>
@@ -134,28 +134,28 @@ export default function VerifyForm() {
           <div className="space-y-2 text-sm">
             {result.title && (
               <div>
-                <span className="text-gray-500">Title: </span>
-                <span className="text-gray-300">{result.title}</span>
+                <span className="text-th-text-muted">Title: </span>
+                <span className="text-th-text-secondary">{result.title}</span>
               </div>
             )}
             <div>
-              <span className="text-gray-500">On-chain hash: </span>
-              <span className="font-mono text-xs text-gray-300 break-all">{result.onChainHash}</span>
+              <span className="text-th-text-muted">On-chain hash: </span>
+              <span className="font-mono text-xs text-th-text-secondary break-all">{result.onChainHash}</span>
             </div>
             <div>
-              <span className="text-gray-500">Your content hash: </span>
-              <span className="font-mono text-xs text-gray-300 break-all">{result.providedHash}</span>
+              <span className="text-th-text-muted">Your content hash: </span>
+              <span className="font-mono text-xs text-th-text-secondary break-all">{result.providedHash}</span>
             </div>
             {result.lockingPublicKey && (
               <div>
-                <span className="text-gray-500">Author: </span>
-                <span className="font-mono text-xs text-gray-300 break-all">{result.lockingPublicKey}</span>
+                <span className="text-th-text-muted">Author: </span>
+                <span className="font-mono text-xs text-th-text-secondary break-all">{result.lockingPublicKey}</span>
               </div>
             )}
             {result.blockheight != null && result.blockheight > 0 && (
               <div>
-                <span className="text-gray-500">Block: </span>
-                <span className="text-gray-300">{result.blockheight.toLocaleString()}</span>
+                <span className="text-th-text-muted">Block: </span>
+                <span className="text-th-text-secondary">{result.blockheight.toLocaleString()}</span>
               </div>
             )}
           </div>
