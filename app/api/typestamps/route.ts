@@ -4,7 +4,7 @@ import { getTypeStampsCollection, TypeStamp } from '@/models/typestamp'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { txid, hash, title, content, identityKey, timestamp, displayName, showIdentityKey, isPublic, isSealed } = body
+    const { txid, hash, title, content, identityKey, timestamp, displayName, showIdentityKey, isPublic, isSealed, rawTx } = body
 
     const sealed = isSealed === true
     if (!txid || !hash || !identityKey || !timestamp) {
@@ -36,6 +36,20 @@ export async function POST(req: NextRequest) {
     }
 
     await collection.insertOne(typestamp)
+
+    // Fire-and-forget overlay submit
+    if (rawTx) {
+      const OVERLAY_URL = process.env.OVERLAY_URL || 'http://localhost:8080'
+      fetch(`${OVERLAY_URL}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'x-topics': JSON.stringify(['tm_typestamp']),
+        },
+        body: Buffer.from(rawTx, 'hex'),
+      }).catch(() => {})
+    }
+
     return NextResponse.json({ success: true, txid }, { status: 201 })
   } catch (error) {
     console.error('POST /api/typestamps error:', error)

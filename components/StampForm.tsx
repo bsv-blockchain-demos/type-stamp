@@ -40,7 +40,7 @@ export default function StampForm() {
       const hash = await sha256(trimmed)
 
       // Check for duplicate
-      const checkRes = await fetch(`/api/typestamps/check?hash=${hash}`)
+      const checkRes = await fetch(`/api/overlay/check?hash=${hash}`)
       const checkData = await checkRes.json()
       if (checkData.exists) {
         setError('A typestamp on these exact characters already exists.')
@@ -53,7 +53,7 @@ export default function StampForm() {
       const title = isSealed ? 'Sealed Stamp' : trimmed.slice(0, MAX_CHARS)
       const result = await createTypeStamp(trimmed, hash, title)
 
-      // Save metadata to backend
+      // Save metadata to backend + submit rawTx to overlay
       await fetch('/api/typestamps', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -68,6 +68,7 @@ export default function StampForm() {
           showIdentityKey,
           isPublic,
           isSealed,
+          rawTx: result.rawTx,
         }),
       })
 

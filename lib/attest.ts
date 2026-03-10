@@ -6,6 +6,7 @@ import { getWallet, getIdentityKey } from './wallet'
 
 export interface TypeStampResult {
   txid: string
+  rawTx: string
   hash: string
   title: string
   timestamp: number
@@ -59,8 +60,19 @@ export async function createTypeStamp(
     throw new Error('Transaction creation failed — no txid returned')
   }
 
+  const tx = result.tx
+  let rawTx = ''
+  if (tx && typeof tx === 'object' && 'toHex' in tx && typeof tx.toHex === 'function') {
+    rawTx = tx.toHex()
+  } else if (tx instanceof Uint8Array) {
+    rawTx = Buffer.from(tx).toString('hex')
+  } else if (Array.isArray(tx)) {
+    rawTx = Buffer.from(tx as number[]).toString('hex')
+  }
+
   return {
     txid: result.txid,
+    rawTx,
     hash,
     title: title.slice(0, 100),
     timestamp,

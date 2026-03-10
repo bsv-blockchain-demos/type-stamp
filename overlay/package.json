@@ -1,0 +1,23 @@
+{
+  "name": "typestamp-overlay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@bsv/overlay": "^0.1.1",
+    "@bsv/overlay-express": "^0.1.0",
+    "@bsv/sdk": "^2.0.6",
+    "better-sqlite3": "^11.0.0",
+    "dotenv": "^16.4.7",
+    "mongodb": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "tsx": "^4.19.0",
+    "typescript": "^5"
+  }
+}

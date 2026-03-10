@@ -7,6 +7,7 @@ import ThemeToggle from './ThemeToggle'
 
 const navLinks = [
   { href: '/', label: 'Home' },
+  { href: '/overlaynetwork', label: 'Overlay Network' },
   { href: '/mytypestamps', label: 'My Stamps' },
   { href: '/verify', label: 'Verify' },
 ]
