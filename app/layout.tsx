@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 import './globals.css'
 import { WalletProvider } from '@/components/WalletProvider'
 import Header from '@/components/Header'
+import Footer from '@/components/Footer'
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -40,6 +41,7 @@ export default function RootLayout({
           <main className="mx-auto max-w-5xl px-4 py-8">
             {children}
           </main>
+          <Footer />
         </WalletProvider>
       </body>
     </html>

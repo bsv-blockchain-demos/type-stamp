@@ -76,9 +76,9 @@ export default function PublicFeed() {
           <thead className="bg-th-surface text-th-text-muted text-xs uppercase tracking-wider">
             <tr>
               <th className="px-4 py-3">TypeStamp</th>
-              <th className="px-4 py-3 whitespace-nowrap">TXID</th>
               <th className="px-4 py-3 whitespace-nowrap">Display Name</th>
               <th className="px-4 py-3 whitespace-nowrap">Identity Key</th>
+              <th className="px-4 py-3 whitespace-nowrap">TXID</th>
               <th className="px-4 py-3 whitespace-nowrap">Created At</th>
             </tr>
           </thead>
@@ -93,14 +93,6 @@ export default function PublicFeed() {
                     {ts.title}
                   </Link>
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap">
-                  <Link
-                    href={`/c/${ts.txid}`}
-                    className="font-mono text-orange-500 hover:text-orange-400 transition-colors"
-                  >
-                    {ts.txid.slice(0, 8)}...
-                  </Link>
-                </td>
                 <td className="px-4 py-3 whitespace-nowrap text-th-text-secondary">
                   {ts.displayName || '\u2014'}
                 </td>
@@ -108,6 +100,14 @@ export default function PublicFeed() {
                   {ts.showIdentityKey
                     ? `${ts.identityKey.slice(0, 10)}...`
                     : 'Private'}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <Link
+                    href={`/c/${ts.txid}`}
+                    className="font-mono text-orange-500 hover:text-orange-400 transition-colors"
+                  >
+                    {ts.txid.slice(0, 8)}...
+                  </Link>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-th-text-muted">
                   {formatDateTime(ts.timestamp)}

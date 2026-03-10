@@ -5,8 +5,6 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import confetti from 'canvas-confetti'
 import ShareButtons from './ShareButtons'
-import { useWallet } from './WalletProvider'
-import { transferTypeStamp } from '@/lib/attest'
 
 interface CertificateCardProps {
   txid: string
@@ -64,13 +62,6 @@ export default function CertificateCard({
   blockheight,
   confirmations,
 }: CertificateCardProps) {
-  const { identityKey: walletIdentityKey } = useWallet()
-  const isOwner = walletIdentityKey === identityKey
-  const [showSendForm, setShowSendForm] = useState(false)
-  const [recipient, setRecipient] = useState('')
-  const [isSending, setIsSending] = useState(false)
-  const [sendError, setSendError] = useState<string | null>(null)
-  const [sendSuccess, setSendSuccess] = useState<string | null>(null)
   const [liveConfirmations, setLiveConfirmations] = useState(confirmations)
   const [liveBlockheight, setLiveBlockheight] = useState(blockheight)
 
@@ -113,38 +104,6 @@ export default function CertificateCard({
       timeStyle: 'short',
     })
 
-  const handleSend = async () => {
-    setSendError(null)
-    setSendSuccess(null)
-    const trimmed = recipient.trim()
-    if (!trimmed) {
-      setSendError('Please enter a recipient identity key.')
-      return
-    }
-    if (!/^[0-9a-fA-F]{66}$/.test(trimmed)) {
-      setSendError('Invalid identity key. Must be a 66-character hex public key.')
-      return
-    }
-    setIsSending(true)
-    try {
-      const { newTxid } = await transferTypeStamp(txid, trimmed)
-      setSendSuccess(`Sent! New TXID: ${newTxid}`)
-      setShowSendForm(false)
-      setRecipient('')
-    } catch (err) {
-      setSendError(err instanceof Error ? err.message : 'Transfer failed.')
-    } finally {
-      setIsSending(false)
-    }
-  }
-
-  const handleCancelSend = () => {
-    setShowSendForm(false)
-    setRecipient('')
-    setSendError(null)
-    setSendSuccess(null)
-  }
-
   return (
     <div className="rounded-xl border border-th-border bg-th-surface overflow-hidden shadow-sm">
       <div className="p-6 sm:p-8 space-y-6">
@@ -175,21 +134,14 @@ export default function CertificateCard({
 
         {/* Author */}
         <div className="text-center space-y-1">
-          {displayName ? (
-            <>
-              <p className="text-sm font-medium text-th-text">{displayName}</p>
-              {showIdentityKey && (
-                <p className="text-xs text-th-text-muted font-mono inline-flex items-center gap-1.5">
-                  {truncateHex(identityKey)}
-                  <CopyButton text={identityKey} />
-                </p>
-              )}
-            </>
-          ) : (
+          {showIdentityKey && (
             <p className="text-xs text-th-text-muted font-mono inline-flex items-center gap-1.5">
               {truncateHex(identityKey)}
               <CopyButton text={identityKey} />
             </p>
+          )}
+          {displayName && (
+            <p className="text-sm font-medium text-th-text">{displayName}</p>
           )}
         </div>
 
@@ -257,56 +209,6 @@ export default function CertificateCard({
         {/* Actions */}
         <div className="flex flex-col gap-3 pt-2">
           <ShareButtons txid={txid} title={title} />
-
-          {isOwner && !showSendForm && !sendSuccess && (
-            <button
-              onClick={() => setShowSendForm(true)}
-              className="w-full py-2 rounded-lg border border-orange-500/30 text-orange-500 font-medium text-sm hover:bg-orange-500/10 transition-all"
-            >
-              Send Token
-            </button>
-          )}
-
-          {sendSuccess && (
-            <p className="text-sm text-green-500 text-center">{sendSuccess}</p>
-          )}
-
-          {isOwner && showSendForm && (
-            <div className="rounded-lg border border-th-border bg-th-surface-alt p-4 space-y-3">
-              <label className="block text-sm font-medium text-th-text">
-                Recipient
-              </label>
-              <input
-                type="text"
-                value={recipient}
-                onChange={(e) => {
-                  setRecipient(e.target.value)
-                  setSendError(null)
-                  setSendSuccess(null)
-                }}
-                placeholder="Enter recipient identity key (66-char hex)"
-                className="w-full rounded-lg border border-th-border bg-th-surface px-3 py-2 text-sm text-th-text placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50"
-              />
-              {sendError && (
-                <p className="text-sm text-red-500">{sendError}</p>
-              )}
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSend}
-                  disabled={isSending}
-                  className="flex-1 py-2 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium text-sm hover:from-orange-600 hover:to-amber-600 transition-all disabled:opacity-50"
-                >
-                  {isSending ? 'Sending…' : 'Send'}
-                </button>
-                <button
-                  onClick={handleCancelSend}
-                  className="flex-1 py-2 rounded-lg border border-th-border text-th-text text-sm hover:bg-th-surface-alt transition-all"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          )}
 
           <Link
             href={`/verify?txid=${txid}`}

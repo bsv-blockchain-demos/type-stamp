@@ -4,6 +4,7 @@ import TransactionHistory from '@/components/TransactionHistory'
 
 interface Props {
   params: { txid: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
 async function getTypeStamp(txid: string) {
@@ -65,17 +66,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function CertificatePage({ params }: Props) {
+export default async function CertificatePage({ params, searchParams }: Props) {
   const typestamp = await getTypeStamp(params.txid)
   const { details, decoded } = await getOnChainData(params.txid)
 
-  // Use DB data if available, otherwise fall back to on-chain data
-  const title = typestamp?.title || decoded?.title || 'Unknown TypeStamp'
-  const content = typestamp?.content || undefined
-  const identityKey = typestamp?.identityKey || decoded?.lockingPublicKey || 'Unknown'
-  const displayName = typestamp?.displayName || undefined
+  // Use DB data first, then on-chain data, then query params (for freshly created stamps)
+  const qp = searchParams
+  const title = typestamp?.title || decoded?.title || (qp.title as string) || 'Unknown TypeStamp'
+  const content = typestamp?.content || (qp.content as string) || undefined
+  const identityKey = typestamp?.identityKey || decoded?.lockingPublicKey || (qp.identityKey as string) || 'Unknown'
+  const displayName = typestamp?.displayName || (qp.displayName as string) || undefined
   const showIdentityKey = typestamp?.showIdentityKey ?? true
-  const timestamp = typestamp?.timestamp || (decoded?.timestamp ? parseInt(decoded.timestamp) : 0)
+  const timestamp = typestamp?.timestamp || (decoded?.timestamp ? parseInt(decoded.timestamp) : 0) || (qp.timestamp ? parseInt(qp.timestamp as string) : 0)
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

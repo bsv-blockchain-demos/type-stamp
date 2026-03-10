@@ -51,10 +51,12 @@ export default function MyTypeStampsList() {
   }, [typestamps, search])
 
   const formatDate = (ts: number) =>
-    new Date(ts * 1000).toLocaleDateString('en-US', {
+    new Date(ts * 1000).toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
     })
 
   if (!isConnected) {

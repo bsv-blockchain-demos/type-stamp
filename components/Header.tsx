@@ -9,7 +9,6 @@ const navLinks = [
   { href: '/', label: 'Home' },
   { href: '/mytypestamps', label: 'My Stamps' },
   { href: '/verify', label: 'Verify' },
-  { href: '/receive', label: 'Receive' },
 ]
 
 export default function Header() {

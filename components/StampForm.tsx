@@ -69,7 +69,15 @@ export default function StampForm() {
         }),
       })
 
-      router.push(`/c/${result.txid}?new=1`)
+      const params = new URLSearchParams({
+        new: '1',
+        title: result.title,
+        content: trimmed,
+        identityKey: result.identityKey,
+        timestamp: result.timestamp.toString(),
+        displayName: displayName.trim(),
+      })
+      router.push(`/c/${result.txid}?${params.toString()}`)
     } catch (err) {
       console.error('Stamp error:', err)
       setError(err instanceof Error ? err.message : 'Failed to create stamp.')
@@ -80,7 +88,7 @@ export default function StampForm() {
 
   if (!isConnected) {
     return (
-      <div className="rounded-xl border border-th-border bg-th-surface p-8 text-center shadow-sm">
+      <div className="max-w-lg mx-auto rounded-xl border border-th-border bg-th-surface p-8 text-center shadow-sm">
         <h2 className="text-lg font-semibold mb-2">Connect Your Wallet</h2>
         <p className="text-th-text-secondary mb-4 text-sm">
           Connect a BSV wallet to start creating your typestamps on the blockchain.
@@ -96,15 +104,15 @@ export default function StampForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-th-border bg-th-surface p-6 shadow-sm">
+    <form onSubmit={handleSubmit} className="max-w-lg mx-auto rounded-xl border border-th-border bg-th-surface p-5 shadow-sm">
       <label htmlFor="content" className="block text-sm font-medium text-th-text-secondary mb-2">
-        Your TypeStamp<span className="text-red-500">*</span>
+        What do you want to stamp? <span className="text-red-500">*</span>
         <span className="relative ml-1 inline-block group">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 inline text-th-text-muted cursor-help">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.94 6.94a.75.75 0 11-1.061-1.061 3 3 0 112.871 5.026v.345a.75.75 0 01-1.5 0v-.5c0-.72.57-1.172 1.081-1.287A1.5 1.5 0 108.94 6.94zM10 15a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
           </svg>
           <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 rounded-lg bg-th-text text-th-bg text-xs p-2.5 leading-relaxed opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-10 shadow-lg">
-            This can be anything &mdash; an idea, a quote, a phrase, a prediction, a trademark, IP, or any other text you want to tokenize and timestamp on the blockchain.
+            Any text. A word, phrase, quote, idea, prediction. Each stamp is permanently recorded on the BSV blockchain. Identical text cannot be stamped twice. First to claim it holds the only timestamp that proves it.
           </span>
         </span>
       </label>
@@ -113,20 +121,21 @@ export default function StampForm() {
         type="text"
         value={content}
         onChange={e => setContent(e.target.value)}
-        placeholder="Type or paste the content you want to typestamp..."
+        placeholder="A word, phrase, idea, prediction..."
         maxLength={MAX_CHARS}
         className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow"
         disabled={isSubmitting}
       />
-      <div className="mt-1 flex items-center justify-between text-xs text-th-text-muted mb-4">
-        <span>Max {MAX_CHARS} characters</span>
-        <span className={content.length >= MAX_CHARS ? 'text-red-500 font-medium' : ''}>
-          {content.length}/{MAX_CHARS}
-        </span>
+      <div className="mt-1 flex items-center justify-end text-xs text-th-text-muted mb-4">
+        {content.length > 0 && (
+          <span className={content.length >= MAX_CHARS ? 'text-red-500 font-medium' : ''}>
+            {content.length}/{MAX_CHARS}
+          </span>
+        )}
       </div>
 
       <label htmlFor="displayName" className="block text-sm font-medium text-th-text-secondary mb-2">
-        Display Name<span className="text-red-500">*</span>
+        Display Name <span className="text-red-500">*</span>
       </label>
       <input
         id="displayName"
@@ -138,11 +147,11 @@ export default function StampForm() {
         disabled={isSubmitting}
       />
 
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 space-y-3 text-left">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm text-th-text-secondary">List this typestamp publicly</span>
-            <p className="text-xs text-th-text-muted">Appears in the Public Registry for anyone to see.</p>
+            <span className="text-sm text-th-text-secondary">List publicly</span>
+            <p className="text-xs text-th-text-muted">Appears in the Public Registry</p>
           </div>
           <button
             type="button"
@@ -160,8 +169,8 @@ export default function StampForm() {
 
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm text-th-text-secondary">Show my identity key publicly</span>
-            <p className="text-xs text-th-text-muted">Lets others verify you as the author.</p>
+            <span className="text-sm text-th-text-secondary">Show identity key</span>
+            <p className="text-xs text-th-text-muted">Lets others verify authorship</p>
           </div>
           <button
             type="button"
@@ -199,7 +208,7 @@ export default function StampForm() {
         disabled={isSubmitting}
         className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 text-white font-bold py-3 rounded-lg transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 disabled:shadow-none"
       >
-        {isSubmitting ? 'Stamping...' : 'Create Your TypeStamp on the Blockchain'}
+        {isSubmitting ? 'Stamping...' : 'Create TypeStamp Token'}
       </button>
     </form>
   )
