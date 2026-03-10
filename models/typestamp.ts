@@ -11,6 +11,7 @@ export interface TypeStamp {
   isPublic: boolean
   displayName: string
   showIdentityKey: boolean
+  isSealed: boolean
   createdAt: Date
 }
 

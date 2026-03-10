@@ -4,9 +4,13 @@ import { getTypeStampsCollection, TypeStamp } from '@/models/typestamp'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { txid, hash, title, content, identityKey, timestamp, displayName, showIdentityKey, isPublic } = body
+    const { txid, hash, title, content, identityKey, timestamp, displayName, showIdentityKey, isPublic, isSealed } = body
 
-    if (!txid || !hash || !title || !content || !identityKey || !timestamp) {
+    const sealed = isSealed === true
+    if (!txid || !hash || !identityKey || !timestamp) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+    if (!sealed && (!title || !content)) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -20,13 +24,14 @@ export async function POST(req: NextRequest) {
     const typestamp: TypeStamp = {
       txid,
       hash,
-      title: title.slice(0, 100),
-      content,
+      title: sealed ? 'Sealed Stamp' : title.slice(0, 100),
+      content: sealed ? '' : content,
       identityKey,
       timestamp,
       isPublic: isPublic !== false,
       displayName: typeof displayName === 'string' ? displayName.trim() : '',
       showIdentityKey: showIdentityKey === true,
+      isSealed: sealed,
       createdAt: new Date(),
     }
 

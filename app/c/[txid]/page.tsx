@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
 import CertificateCard from '@/components/CertificateCard'
-import TransactionHistory from '@/components/TransactionHistory'
 
 interface Props {
   params: { txid: string }
@@ -77,6 +76,7 @@ export default async function CertificatePage({ params, searchParams }: Props) {
   const identityKey = typestamp?.identityKey || decoded?.lockingPublicKey || (qp.identityKey as string) || 'Unknown'
   const displayName = typestamp?.displayName || (qp.displayName as string) || undefined
   const showIdentityKey = typestamp?.showIdentityKey ?? true
+  const isSealed = typestamp?.isSealed === true || qp.isSealed === '1'
   const timestamp = typestamp?.timestamp || (decoded?.timestamp ? parseInt(decoded.timestamp) : 0) || (qp.timestamp ? parseInt(qp.timestamp as string) : 0)
 
   return (
@@ -88,12 +88,12 @@ export default async function CertificatePage({ params, searchParams }: Props) {
         identityKey={identityKey}
         displayName={displayName}
         showIdentityKey={showIdentityKey}
+        isSealed={isSealed}
         timestamp={timestamp}
         blockheight={details?.blockheight}
         blocktime={details?.blocktime}
         confirmations={details?.confirmations}
       />
-      <TransactionHistory txid={params.txid} />
     </div>
   )
 }

@@ -112,8 +112,12 @@ export default function VerifyForm() {
 
         <button
           type="submit"
-          disabled={isVerifying || !txid.trim() || !content.trim()}
-          className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 text-white font-medium py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 disabled:shadow-none"
+          disabled={isVerifying}
+          className={`w-full font-bold py-3 rounded-lg transition-all duration-200 text-white ${
+            !txid.trim() || !content.trim()
+              ? 'bg-gray-400 dark:bg-gray-700 text-gray-200 dark:text-gray-500 cursor-not-allowed'
+              : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30'
+          } disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 disabled:shadow-none`}
         >
           {isVerifying ? 'Verifying...' : 'Verify'}
         </button>

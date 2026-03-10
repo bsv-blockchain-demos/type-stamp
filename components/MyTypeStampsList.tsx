@@ -1,14 +1,50 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { useWallet } from './WalletProvider'
 
+function CopyHashButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }, [text])
+
+  return (
+    <button
+      onClick={handleCopy}
+      title={copied ? 'Copied!' : 'Copy hash'}
+      className="inline-flex items-center text-th-text-muted hover:text-orange-500 transition-colors shrink-0"
+    >
+      {copied ? (
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      ) : (
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
+function bareHash(hash: string) {
+  return hash.startsWith('sha256:') ? hash.slice(7) : hash
+}
+
 interface TypeStampSummary {
   txid: string
+  hash: string
   title: string
   timestamp: number
   isPublic: boolean
+  isSealed: boolean
   displayName: string
   showIdentityKey: boolean
   identityKey: string
@@ -55,8 +91,10 @@ export default function MyTypeStampsList() {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
-      hour: 'numeric',
+      hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'UTC',
+      timeZoneName: 'short',
     })
 
   if (!isConnected) {
@@ -101,16 +139,16 @@ export default function MyTypeStampsList() {
         </div>
       </div>
 
-      {/* Search */}
-      <input
-        type="text"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder="Search stamps..."
-        className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow mb-1"
-      />
+      {/* Search + Results */}
+      <div className="space-y-3">
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search stamps..."
+          className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow"
+        />
 
-      {/* Results */}
       {filtered.length === 0 ? (
         <p className="text-center text-th-text-muted text-sm py-6">No stamps match &ldquo;{search}&rdquo;</p>
       ) : (
@@ -119,13 +157,28 @@ export default function MyTypeStampsList() {
             <Link
               key={ts.txid}
               href={`/c/${ts.txid}`}
-              className="group block rounded-lg border border-th-border bg-th-surface p-4 shadow-sm hover:shadow-md hover:border-orange-500/30 transition-all"
+              className={`group block rounded-lg border border-th-border bg-th-surface p-4 shadow-sm hover:shadow-md hover:border-orange-500/30 transition-all ${ts.isSealed ? 'border-l-4 border-l-gray-400 dark:border-l-gray-600' : ''}`}
             >
               <div className="flex items-start justify-between gap-3">
                 {/* Stamp title as hero */}
-                <p className="text-lg font-bold text-th-text leading-snug group-hover:text-orange-500 transition-colors">
-                  &ldquo;{ts.title}&rdquo;
-                </p>
+                {ts.isSealed ? (
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="inline-flex items-center gap-1 shrink-0 text-xs font-medium text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                        <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                      </svg>
+                      Sealed
+                    </span>
+                    <span className="text-sm font-mono text-th-text-muted truncate group-hover:text-orange-500 transition-colors">
+                      {bareHash(ts.hash).slice(0, 8)}&hellip;{bareHash(ts.hash).slice(-8)}
+                    </span>
+                    <CopyHashButton text={ts.hash} />
+                  </div>
+                ) : (
+                  <p className="text-lg font-bold text-th-text leading-snug group-hover:text-orange-500 transition-colors">
+                    &ldquo;{ts.title}&rdquo;
+                  </p>
+                )}
 
                 {/* Chevron */}
                 <svg className="w-4 h-4 mt-1.5 shrink-0 text-th-text-muted group-hover:text-orange-500 transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -144,7 +197,7 @@ export default function MyTypeStampsList() {
                 ) : null}
                 <span className="mx-1.5">&middot;</span>
                 {ts.isPublic ? (
-                  <span className="text-orange-500 font-medium">Public</span>
+                  <span className="text-orange-500 font-medium">{ts.isSealed ? 'Listed' : 'Public'}</span>
                 ) : (
                   <span className="text-th-text-muted bg-th-surface-alt px-1.5 py-0.5 rounded">Private</span>
                 )}
@@ -153,6 +206,7 @@ export default function MyTypeStampsList() {
           ))}
         </div>
       )}
+      </div>
     </div>
   )
 }

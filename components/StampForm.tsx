@@ -15,6 +15,7 @@ export default function StampForm() {
   const [content, setContent] = useState('')
   const [showIdentityKey, setShowIdentityKey] = useState(true)
   const [isPublic, setIsPublic] = useState(true)
+  const [isSealed, setIsSealed] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [duplicateTxid, setDuplicateTxid] = useState<string | null>(null)
@@ -49,7 +50,7 @@ export default function StampForm() {
       }
 
       // Create on-chain PushDrop token
-      const title = trimmed.slice(0, MAX_CHARS)
+      const title = isSealed ? 'Sealed Stamp' : trimmed.slice(0, MAX_CHARS)
       const result = await createTypeStamp(trimmed, hash, title)
 
       // Save metadata to backend
@@ -59,20 +60,21 @@ export default function StampForm() {
         body: JSON.stringify({
           txid: result.txid,
           hash: result.hash,
-          title: result.title,
-          content: trimmed,
+          title,
+          ...(isSealed ? {} : { content: trimmed }),
           identityKey: result.identityKey,
           timestamp: result.timestamp,
           displayName: displayName.trim(),
           showIdentityKey,
           isPublic,
+          isSealed,
         }),
       })
 
       const params = new URLSearchParams({
         new: '1',
-        title: result.title,
-        content: trimmed,
+        title,
+        ...(isSealed ? { isSealed: '1' } : { content: trimmed }),
         identityKey: result.identityKey,
         timestamp: result.timestamp.toString(),
         displayName: displayName.trim(),
@@ -147,30 +149,49 @@ export default function StampForm() {
         disabled={isSubmitting}
       />
 
-      <div className="mt-4 space-y-3 text-left">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-sm text-th-text-secondary">List publicly</span>
-            <p className="text-xs text-th-text-muted">Appears in the Public Registry</p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={isPublic}
-            disabled={isSubmitting}
-            onClick={() => setIsPublic(v => !v)}
-            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:ring-offset-2 focus:ring-offset-th-bg ${
-              isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-            } ${isPublic ? 'bg-orange-500' : 'bg-th-text-muted'}`}
-          >
-            <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
-          </button>
-        </div>
+      {/* Stamp mode + identity toggle */}
+      <div className="mt-5 space-y-4">
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium text-th-text-secondary mb-1">How do you want to stamp this?</legend>
+
+          <label className={`flex items-center gap-3 cursor-pointer ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <input
+              type="radio"
+              name="stampMode"
+              checked={!isSealed}
+              onChange={() => { setIsSealed(false); setIsPublic(true) }}
+              disabled={isSubmitting}
+              className="accent-orange-500"
+            />
+            <span className={`text-sm text-th-text ${!isSealed ? 'font-semibold' : ''}`}>Public</span>
+            <span className="text-xs text-th-text-muted">Your text is visible to everyone</span>
+          </label>
+
+          <label className={`flex items-center gap-3 cursor-pointer ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <input
+              type="radio"
+              name="stampMode"
+              checked={isSealed}
+              onChange={() => { setIsSealed(true); setIsPublic(true) }}
+              disabled={isSubmitting}
+              className="accent-orange-500"
+            />
+            <span className={`text-sm text-th-text inline-flex items-center gap-1 ${isSealed ? 'font-semibold' : ''}`}>
+              Sealed
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-orange-500">
+                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+              </svg>
+            </span>
+            <span className="text-xs text-th-text-muted">Only the hash is stored. Content stays private.</span>
+          </label>
+        </fieldset>
+
+        <hr className="border-th-border" />
 
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm text-th-text-secondary">Show identity key</span>
-            <p className="text-xs text-th-text-muted">Lets others verify authorship</p>
+            <span className="text-sm text-th-text-secondary">Show my identity key publicly</span>
+            <p className="text-xs text-th-text-muted">Lets others verify you as the author.</p>
           </div>
           <button
             type="button"
@@ -185,8 +206,6 @@ export default function StampForm() {
             <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${showIdentityKey ? 'translate-x-6' : 'translate-x-1'}`} />
           </button>
         </div>
-
-        <p className="text-xs text-th-text-muted">Both of these settings can be changed later under My Stamps.</p>
       </div>
 
       {error && (
@@ -208,7 +227,7 @@ export default function StampForm() {
         disabled={isSubmitting}
         className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 text-white font-bold py-3 rounded-lg transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 disabled:shadow-none"
       >
-        {isSubmitting ? 'Stamping...' : 'Create TypeStamp Token'}
+        {isSubmitting ? 'Stamping...' : 'Stamp It'}
       </button>
     </form>
   )

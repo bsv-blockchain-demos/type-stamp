@@ -31,6 +31,38 @@ export async function GET(
   }
 }
 
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { txid: string } }
+) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const identityKey = searchParams.get('identityKey')
+
+    if (!identityKey) {
+      return NextResponse.json({ error: 'Missing identityKey' }, { status: 400 })
+    }
+
+    const collection = await getTypeStampsCollection()
+    const typestamp = await collection.findOne({ txid: params.txid })
+
+    if (!typestamp) {
+      return NextResponse.json({ error: 'TypeStamp not found' }, { status: 404 })
+    }
+
+    if (typestamp.identityKey !== identityKey) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    await collection.deleteOne({ txid: params.txid })
+
+    return NextResponse.json({ success: true, txid: params.txid })
+  } catch (error) {
+    console.error('DELETE /api/typestamps/[txid] error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { txid: string } }

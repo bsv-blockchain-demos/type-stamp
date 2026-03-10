@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import confetti from 'canvas-confetti'
 import ShareButtons from './ShareButtons'
+import { useWallet } from './WalletProvider'
 
 interface CertificateCardProps {
   txid: string
@@ -13,6 +14,7 @@ interface CertificateCardProps {
   identityKey: string
   displayName?: string
   showIdentityKey?: boolean
+  isSealed?: boolean
   timestamp: number
   blockheight?: number
   blocktime?: number
@@ -58,15 +60,43 @@ export default function CertificateCard({
   identityKey,
   displayName,
   showIdentityKey = true,
+  isSealed = false,
   timestamp,
   blockheight,
   confirmations,
 }: CertificateCardProps) {
   const [liveConfirmations, setLiveConfirmations] = useState(confirmations)
   const [liveBlockheight, setLiveBlockheight] = useState(blockheight)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const { identityKey: walletIdentityKey } = useWallet()
+  const router = useRouter()
+  const isOwner = walletIdentityKey === identityKey
 
   const isPending = !liveConfirmations || liveConfirmations <= 0
   const searchParams = useSearchParams()
+
+  const handleDelete = async () => {
+    if (!walletIdentityKey) return
+    setIsDeleting(true)
+    try {
+      const res = await fetch(`/api/typestamps/${txid}?identityKey=${walletIdentityKey}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        router.push('/mytypestamps')
+      } else {
+        const data = await res.json()
+        alert(data.error || 'Failed to delete stamp.')
+      }
+    } catch {
+      alert('Failed to delete stamp.')
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
 
   useEffect(() => {
     if (searchParams.get('new') !== '1') return
@@ -100,8 +130,13 @@ export default function CertificateCard({
 
   const formatDate = (ts: number) =>
     new Date(ts * 1000).toLocaleString('en-US', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'UTC',
+      timeZoneName: 'short',
     })
 
   return (
@@ -128,9 +163,27 @@ export default function CertificateCard({
         </div>
 
         {/* Hero content */}
-        <blockquote className="text-2xl sm:text-3xl font-bold text-th-text leading-snug text-center">
-          &ldquo;{content || title}&rdquo;
-        </blockquote>
+        {isSealed ? (
+          <div className="text-center space-y-2 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 mx-auto text-th-text-muted">
+              <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+            </svg>
+            <p className="text-lg font-semibold text-th-text">This stamp is sealed.</p>
+            <p className="text-sm text-th-text-muted">Content is hidden. Only the hash is stored on-chain.</p>
+            <div className="mt-3 rounded-lg border border-th-border bg-th-surface-alt p-4 text-left text-sm space-y-1.5">
+              <p className="font-medium text-th-text-secondary">To prove your claim to someone:</p>
+              <ol className="list-decimal list-inside text-th-text-muted space-y-0.5">
+                <li>Share your original text with them</li>
+                <li>Send them this TXID</li>
+                <li>They verify at <Link href={`/verify?txid=${txid}`} className="text-orange-500 hover:text-orange-400 transition-colors">/verify</Link></li>
+              </ol>
+            </div>
+          </div>
+        ) : (
+          <blockquote className="text-2xl sm:text-3xl font-bold text-th-text leading-snug text-center">
+            &ldquo;{content || title}&rdquo;
+          </blockquote>
+        )}
 
         {/* Author */}
         <div className="text-center space-y-1">
@@ -216,6 +269,37 @@ export default function CertificateCard({
           >
             Verify Your Version &rarr;
           </Link>
+
+          {isOwner && (
+            <>
+              {!showDeleteConfirm ? (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-sm text-th-text-muted hover:text-red-500 transition-colors"
+                >
+                  Delete Stamp
+                </button>
+              ) : (
+                <div className="flex items-center justify-center gap-3 rounded-lg border border-red-500/30 bg-red-500/5 p-3">
+                  <p className="text-sm text-red-500">Delete this stamp? This frees the text for others to claim.</p>
+                  <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="shrink-0 text-sm font-medium text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 px-3 py-1 rounded-lg transition-colors"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Confirm'}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                    className="shrink-0 text-sm text-th-text-muted hover:text-th-text transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

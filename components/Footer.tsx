@@ -1,30 +1,12 @@
 'use client'
 
-import Image from 'next/image'
-
 export default function Footer() {
   return (
     <footer className="border-t border-th-border bg-th-surface/80">
       <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-th-text-muted">
-          <Image
-            src="/images/logo_squared_light.png"
-            alt="TypeStamp"
-            width={24}
-            height={24}
-            className="block dark:hidden"
-          />
-          <Image
-            src="/images/logo_squared_dark.png"
-            alt="TypeStamp"
-            width={24}
-            height={24}
-            className="hidden dark:block"
-          />
-          <span>
-            <span className="font-bold bg-gradient-to-r from-orange-500 to-amber-400 bg-clip-text text-transparent">TypeStamp</span>
-            {' '}&mdash; Proof of authorship on BSV.
-          </span>
+        <div className="text-sm text-th-text-muted">
+          <span className="font-bold bg-gradient-to-r from-orange-500 to-amber-400 bg-clip-text text-transparent">TypeStamp</span>
+          {' '}&mdash; Proof of authorship on BSV.
         </div>
         <a
           href="https://github.com/bsv-blockchain-demos/type-stamp"

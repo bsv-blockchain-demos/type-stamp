@@ -6,6 +6,7 @@ import Link from 'next/link'
 interface TypeStampSummary {
   txid: string
   title: string
+  isSealed?: boolean
   identityKey: string
   displayName: string
   showIdentityKey: boolean
@@ -46,6 +47,8 @@ export default function PublicFeed() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'UTC',
+      timeZoneName: 'short',
     })
   }
 
@@ -90,7 +93,14 @@ export default function PublicFeed() {
                     href={`/c/${ts.txid}`}
                     className="text-th-text hover:text-orange-500 transition-colors"
                   >
-                    {ts.title}
+                    {ts.isSealed ? (
+                      <span className="inline-flex items-center gap-1 text-orange-500 font-medium">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                          <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                        </svg>
+                        Sealed
+                      </span>
+                    ) : ts.title}
                   </Link>
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap text-th-text-secondary">
