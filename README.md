@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ClaimStamp
+
+Stake a timestamped, identity-bound claim on your ideas, works, IP, quotes, phrase or any text by recording them on the BSV blockchain as tokens. 
+
+**Core promise:** "This exact content was known to this identity at this block height."
+
+## How It Works
+
+1. **Write** your claim — an idea, quote, phrase, or any text you want to tokenize and timestamp immutably on the blockchain
+2. **Stamp** it — ClaimStamp hashes the content and records a PushDrop token on the BSV blockchain
+3. **Share** the certificate link — anyone can verify the claim without a wallet
+4. **Toggle** your claim can be seen available on the public feed, or toggled to private as you see fit
+
+## Tech Stack
+
+- **Next.js 14** — App Router, TypeScript, Tailwind CSS
+- **@bsv/sdk** — WalletClient, PushDrop, SecurityLevels
+- **MongoDB Atlas** — claim metadata, duplicate detection, public feed
+- **WhatsOnChain API** — on-chain verification
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- A MongoDB Atlas cluster (or local MongoDB)
+- A BSV wallet (e.g. BSV Desktop) for stamping claims
+
+### Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.local.example .env.local
+# Edit .env.local with your MongoDB URI
+```
+
+### Environment Variables
+
+Create a `.env.local` file:
+
+```
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/claimstamp?retryWrites=true&w=majority
+NEXT_PUBLIC_WOC_BASE=https://api.whatsonchain.com/v1/bsv/main
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+  page.tsx                    # Home — stamp form + public feed
+  c/[txid]/page.tsx           # Certificate page (SSR + OG tags)
+  verify/page.tsx             # Verify a claim (no wallet needed)
+  myclaimstamps/page.tsx      # User's claims + visibility toggle
+  api/claims/                 # POST (create) + GET (list)
+  api/claims/[txid]/          # GET (single) + PATCH (toggle visibility)
+  api/claims/check/           # GET (duplicate hash check)
 
-## Learn More
+components/
+  WalletProvider.tsx           # React context for wallet state
+  Header.tsx                   # Nav bar + wallet connect button
+  StampForm.tsx                # Content input + stamp flow
+  PublicFeed.tsx               # Recent public claims feed
+  CertificateCard.tsx          # Certificate display + share buttons
+  ShareButtons.tsx             # X + LinkedIn share
+  VerifyForm.tsx               # Verify content against on-chain hash
+  MyClaimsList.tsx             # User's claims + public/private toggle
 
-To learn more about Next.js, take a look at the following resources:
+lib/
+  mongodb.ts                   # MongoDB connection singleton
+  hash.ts                      # SHA-256 via Web Crypto API
+  wallet.ts                    # WalletClient singleton + helpers
+  attest.ts                    # PushDrop token creation
+  verify.ts                    # WhatsOnChain fetch + PushDrop decode
+  share.ts                     # Social share URL builders
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+models/
+  claim.ts                     # Claim type + MongoDB collection helper
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## On-Chain Format
 
-## Deploy on Vercel
+Each ClaimStamp is a PushDrop token with four fields:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Field | Value |
+|-------|-------|
+| Protocol | `claimstamp` |
+| Hash | `sha256:<hex>` |
+| Title | First 100 characters of content |
+| Timestamp | Unix timestamp |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The token is locked to the creator's identity key, signed, and stored in the `claimstamp` basket.
+
+## Deploy
+
+Deploy to Vercel:
+
+```bash
+npm run build
+```
+
+Set the same environment variables in your Vercel project settings.
