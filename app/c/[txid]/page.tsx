@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import CertificateCard from '@/components/CertificateCard'
+import TransactionHistory from '@/components/TransactionHistory'
 
 interface Props {
   params: { txid: string }
@@ -72,20 +73,25 @@ export default async function CertificatePage({ params }: Props) {
   const title = typestamp?.title || decoded?.title || 'Unknown TypeStamp'
   const content = typestamp?.content || undefined
   const identityKey = typestamp?.identityKey || decoded?.lockingPublicKey || 'Unknown'
+  const displayName = typestamp?.displayName || undefined
+  const showIdentityKey = typestamp?.showIdentityKey ?? true
   const timestamp = typestamp?.timestamp || (decoded?.timestamp ? parseInt(decoded.timestamp) : 0)
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto space-y-6">
       <CertificateCard
         txid={params.txid}
         title={title}
         content={content}
         identityKey={identityKey}
+        displayName={displayName}
+        showIdentityKey={showIdentityKey}
         timestamp={timestamp}
         blockheight={details?.blockheight}
         blocktime={details?.blocktime}
         confirmations={details?.confirmations}
       />
+      <TransactionHistory txid={params.txid} />
     </div>
   )
 }

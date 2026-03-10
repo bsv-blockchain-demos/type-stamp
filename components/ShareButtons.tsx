@@ -20,12 +20,12 @@ export default function ShareButtons({ txid, title }: ShareButtonsProps) {
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex gap-2">
       <a
         href={buildXShareUrl(txid, title, appUrl)}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sm bg-th-surface-alt border border-th-border hover:border-th-border-hover text-th-text-secondary hover:text-th-text px-4 py-2 rounded-lg transition-colors"
+        className="flex-1 text-center text-sm bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-all"
       >
         Share on X
       </a>
@@ -33,13 +33,13 @@ export default function ShareButtons({ txid, title }: ShareButtonsProps) {
         href={buildLinkedInShareUrl(txid, appUrl)}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-sm bg-th-surface-alt border border-th-border hover:border-th-border-hover text-th-text-secondary hover:text-th-text px-4 py-2 rounded-lg transition-colors"
+        className="flex-1 text-center text-sm bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-all"
       >
         Share on LinkedIn
       </a>
       <button
         onClick={handleCopy}
-        className="text-sm bg-th-surface-alt border border-th-border hover:border-th-border-hover text-th-text-secondary hover:text-th-text px-4 py-2 rounded-lg transition-colors"
+        className="flex-1 text-sm bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-medium px-4 py-2 rounded-lg transition-all"
       >
         {copied ? 'Copied!' : 'Copy Link'}
       </button>

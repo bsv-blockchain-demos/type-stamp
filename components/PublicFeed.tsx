@@ -88,7 +88,7 @@ export default function PublicFeed() {
                 <td className="px-4 py-3 max-w-xs truncate">
                   <Link
                     href={`/c/${ts.txid}`}
-                    className="text-th-text hover:text-emerald-500 transition-colors"
+                    className="text-th-text hover:text-orange-500 transition-colors"
                   >
                     {ts.title}
                   </Link>
@@ -96,7 +96,7 @@ export default function PublicFeed() {
                 <td className="px-4 py-3 whitespace-nowrap">
                   <Link
                     href={`/c/${ts.txid}`}
-                    className="font-mono text-emerald-500 hover:text-emerald-400 transition-colors"
+                    className="font-mono text-orange-500 hover:text-orange-400 transition-colors"
                   >
                     {ts.txid.slice(0, 8)}...
                   </Link>
@@ -142,7 +142,7 @@ export default function PublicFeed() {
               disabled={isLoading}
               className={`px-3 py-1.5 rounded-lg border transition-colors ${
                 p === page
-                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-500 font-medium'
+                  ? 'border-orange-500 bg-orange-500/10 text-orange-500 font-medium'
                   : 'border-th-border text-th-text-secondary hover:text-th-text hover:bg-th-surface-alt'
               }`}
             >

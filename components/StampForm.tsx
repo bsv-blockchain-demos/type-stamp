@@ -13,18 +13,24 @@ export default function StampForm() {
   const router = useRouter()
   const [displayName, setDisplayName] = useState('')
   const [content, setContent] = useState('')
-  const [showIdentityKey, setShowIdentityKey] = useState(false)
+  const [showIdentityKey, setShowIdentityKey] = useState(true)
   const [isPublic, setIsPublic] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [duplicateTxid, setDuplicateTxid] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setDuplicateTxid(null)
 
     const trimmed = content.trim()
     if (!trimmed) {
       setError('Please enter some content to stamp.')
+      return
+    }
+    if (!displayName.trim()) {
+      setError('Please enter a display name.')
       return
     }
 
@@ -36,7 +42,8 @@ export default function StampForm() {
       const checkRes = await fetch(`/api/typestamps/check?hash=${hash}`)
       const checkData = await checkRes.json()
       if (checkData.exists) {
-        setError(`A typestamp on these exact characters already exists (${checkData.txid.slice(0, 8)}...).`)
+        setError('A typestamp on these exact characters already exists.')
+        setDuplicateTxid(checkData.txid)
         setIsSubmitting(false)
         return
       }
@@ -62,7 +69,7 @@ export default function StampForm() {
         }),
       })
 
-      router.push(`/c/${result.txid}`)
+      router.push(`/c/${result.txid}?new=1`)
     } catch (err) {
       console.error('Stamp error:', err)
       setError(err instanceof Error ? err.message : 'Failed to create stamp.')
@@ -80,7 +87,7 @@ export default function StampForm() {
         </p>
         <button
           onClick={connect}
-          className="bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white px-6 py-2 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30"
+          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white px-6 py-2 rounded-lg transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30"
         >
           Connect Wallet
         </button>
@@ -90,19 +97,6 @@ export default function StampForm() {
 
   return (
     <form onSubmit={handleSubmit} className="rounded-xl border border-th-border bg-th-surface p-6 shadow-sm">
-      <label htmlFor="displayName" className="block text-sm font-medium text-th-text-secondary mb-2">
-        Display Name
-      </label>
-      <input
-        id="displayName"
-        type="text"
-        value={displayName}
-        onChange={e => setDisplayName(e.target.value)}
-        placeholder="Your name or alias (optional)"
-        className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-shadow mb-4"
-        disabled={isSubmitting}
-      />
-
       <label htmlFor="content" className="block text-sm font-medium text-th-text-secondary mb-2">
         Your TypeStamp<span className="text-red-500">*</span>
         <span className="relative ml-1 inline-block group">
@@ -114,57 +108,96 @@ export default function StampForm() {
           </span>
         </span>
       </label>
-      <textarea
+      <input
         id="content"
+        type="text"
         value={content}
         onChange={e => setContent(e.target.value)}
         placeholder="Type or paste the content you want to typestamp..."
         maxLength={MAX_CHARS}
-        rows={3}
-        className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-3 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-shadow resize-y"
+        className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow"
         disabled={isSubmitting}
       />
-      <div className="mt-1 flex items-center justify-between text-xs text-th-text-muted">
+      <div className="mt-1 flex items-center justify-between text-xs text-th-text-muted mb-4">
         <span>Max {MAX_CHARS} characters</span>
         <span className={content.length >= MAX_CHARS ? 'text-red-500 font-medium' : ''}>
           {content.length}/{MAX_CHARS}
         </span>
       </div>
 
-      <div className="mt-4 space-y-2">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isPublic}
-            onChange={e => setIsPublic(e.target.checked)}
-            className="h-4 w-4 rounded border-th-border bg-th-surface-alt text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
-            disabled={isSubmitting}
-          />
-          <span className="text-sm text-th-text-secondary">List this typestamp publicly</span>
-        </label>
+      <label htmlFor="displayName" className="block text-sm font-medium text-th-text-secondary mb-2">
+        Display Name<span className="text-red-500">*</span>
+      </label>
+      <input
+        id="displayName"
+        type="text"
+        value={displayName}
+        onChange={e => setDisplayName(e.target.value)}
+        placeholder="Your name or alias"
+        className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow"
+        disabled={isSubmitting}
+      />
 
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={showIdentityKey}
-            onChange={e => setShowIdentityKey(e.target.checked)}
-            className="h-4 w-4 rounded border-th-border bg-th-surface-alt text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+      <div className="mt-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm text-th-text-secondary">List this typestamp publicly</span>
+            <p className="text-xs text-th-text-muted">Appears in the Public Registry for anyone to see.</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isPublic}
             disabled={isSubmitting}
-          />
-          <span className="text-sm text-th-text-secondary">Show my identity key publicly</span>
-        </label>
+            onClick={() => setIsPublic(v => !v)}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:ring-offset-2 focus:ring-offset-th-bg ${
+              isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            } ${isPublic ? 'bg-orange-500' : 'bg-th-text-muted'}`}
+          >
+            <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
+          </button>
+        </div>
 
-        <p className="text-xs text-th-text-muted">Both of these settings can be changed later under My TypeStamps.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm text-th-text-secondary">Show my identity key publicly</span>
+            <p className="text-xs text-th-text-muted">Lets others verify you as the author.</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={showIdentityKey}
+            disabled={isSubmitting}
+            onClick={() => setShowIdentityKey(v => !v)}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:ring-offset-2 focus:ring-offset-th-bg ${
+              isSubmitting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            } ${showIdentityKey ? 'bg-orange-500' : 'bg-th-text-muted'}`}
+          >
+            <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${showIdentityKey ? 'translate-x-6' : 'translate-x-1'}`} />
+          </button>
+        </div>
+
+        <p className="text-xs text-th-text-muted">Both of these settings can be changed later under My Stamps.</p>
       </div>
 
       {error && (
-        <p className="mt-2 text-sm text-red-500">{error}</p>
+        <div className="mt-2 text-sm text-red-500">
+          <p>{error}</p>
+          {duplicateTxid && (
+            <a
+              href={`/c/${duplicateTxid}`}
+              className="block mt-1 font-mono text-xs text-orange-500 hover:text-orange-400 transition-colors break-all"
+            >
+              {duplicateTxid} &rarr;
+            </a>
+          )}
+        </div>
       )}
 
       <button
         type="submit"
-        disabled={isSubmitting || !content.trim()}
-        className="mt-4 w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 text-white font-medium py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 disabled:shadow-none"
+        disabled={isSubmitting}
+        className="mt-4 w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 text-white font-bold py-3 rounded-lg transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 disabled:shadow-none"
       >
         {isSubmitting ? 'Stamping...' : 'Create Your TypeStamp on the Blockchain'}
       </button>

@@ -88,7 +88,7 @@ export default function VerifyForm() {
             value={txid}
             onChange={e => setTxid(e.target.value)}
             placeholder="Enter the TXID of the typestamp to verify..."
-            className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm font-mono placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-shadow"
+            className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm font-mono placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow"
             disabled={isVerifying}
           />
         </div>
@@ -103,7 +103,7 @@ export default function VerifyForm() {
             onChange={e => setContent(e.target.value)}
             placeholder="Paste the original content to verify against the on-chain hash..."
             rows={6}
-            className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-3 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-shadow resize-y"
+            className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-3 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow resize-y"
             disabled={isVerifying}
           />
         </div>
@@ -113,7 +113,7 @@ export default function VerifyForm() {
         <button
           type="submit"
           disabled={isVerifying || !txid.trim() || !content.trim()}
-          className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 text-white font-medium py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 disabled:shadow-none"
+          className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 disabled:from-gray-400 disabled:to-gray-400 disabled:dark:from-gray-700 disabled:dark:to-gray-700 disabled:text-gray-200 disabled:dark:text-gray-500 text-white font-medium py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 disabled:shadow-none"
         >
           {isVerifying ? 'Verifying...' : 'Verify'}
         </button>
@@ -122,11 +122,11 @@ export default function VerifyForm() {
       {result && (
         <div className={`rounded-xl border p-6 shadow-sm ${
           result.match
-            ? 'border-emerald-500/30 bg-emerald-500/5'
+            ? 'border-orange-500/30 bg-orange-500/5'
             : 'border-red-500/30 bg-red-500/5'
         }`}>
           <h3 className={`text-lg font-semibold mb-3 ${
-            result.match ? 'text-emerald-500' : 'text-red-500'
+            result.match ? 'text-orange-500' : 'text-red-500'
           }`}>
             {result.match ? 'Match Confirmed' : 'Mismatch Detected'}
           </h3>
