@@ -21,13 +21,15 @@ Stake a timestamped, identity-bound claim on your ideas, works, IP, quotes, phra
 - **Duplicate detection** — identical text cannot be stamped twice
 - **Identity-bound** — each stamp is locked to the creator's identity key
 - **UTC timestamps** — all times displayed in UTC to match blockchain time
+- **Overlay Network** — stamps are submitted to a BSV Overlay for decentralized indexing and lookup
 - **Dark/light theme** — toggle between themes
 
 ## Tech Stack
 
 - **Next.js 14** — App Router, TypeScript, Tailwind CSS
 - **@bsv/sdk** — WalletClient, PushDrop, SecurityLevels
-- **MongoDB Atlas** — stamp metadata, duplicate detection, public feed
+- **@bsv/overlay-express** — Overlay server with custom topic manager and lookup service
+- **MongoDB Atlas** — stamp metadata, overlay indexing, duplicate detection
 - **WhatsOnChain API** — on-chain transaction verification
 
 ## Getting Started
@@ -43,6 +45,7 @@ Stake a timestamped, identity-bound claim on your ideas, works, IP, quotes, phra
 ```bash
 # Install dependencies
 npm install
+cd overlay && npm install && cd ..
 
 # Configure environment
 cp .env.local.example .env.local
@@ -59,11 +62,23 @@ NEXT_PUBLIC_WOC_BASE=https://api.whatsonchain.com/v1/bsv/main
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
+Create an `overlay/.env` file:
+
+```
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/typestamp?retryWrites=true&w=majority
+OVERLAY_PRIVATE_KEY=<hex private key>
+OVERLAY_HOSTING_URL=http://localhost:8080
+OVERLAY_PORT=8080
+```
+
 ### Run
 
 ```bash
-npm run dev
+# Run Next.js + Overlay server together
+npm run dev:all
 ```
+
+This starts both the Next.js app on port 3000 and the overlay server on port 8080.
 
 Open [http://localhost:3000](http://localhost:3000).
 
@@ -73,16 +88,19 @@ Open [http://localhost:3000](http://localhost:3000).
 app/
   page.tsx                    # Home — stamp form + public feed
   c/[txid]/page.tsx           # Certificate page (SSR + OG tags)
+  overlaynetwork/page.tsx     # Overlay Network — live feed from overlay lookup
   verify/page.tsx             # Verify a stamp (no wallet needed)
   mytypestamps/page.tsx       # User's stamps + visibility toggle
-  api/typestamps/             # POST (create) + GET (list)
+  api/typestamps/             # POST (create, submits BEEF to overlay) + GET (list)
   api/typestamps/[txid]/      # GET (single) + PATCH (visibility) + DELETE
-  api/typestamps/check/       # GET (duplicate hash check)
+  api/overlay/check/          # GET (duplicate check via overlay lookup)
+  api/overlay/stamps/         # GET (paginated stamps from overlay)
 
 components/
   WalletProvider.tsx           # React context for wallet state
   Header.tsx                   # Nav bar + wallet connect + theme toggle
   StampForm.tsx                # Content input + public/sealed mode + stamp flow
+  NetworkFeed.tsx              # Overlay Network feed with pagination
   PublicFeed.tsx               # Public registry table with pagination
   CertificateCard.tsx          # Certificate display + share + delete
   ShareButtons.tsx             # X + LinkedIn share
@@ -101,6 +119,12 @@ lib/
 
 models/
   typestamp.ts                 # TypeStamp interface + MongoDB collection helper
+
+overlay/
+  src/index.ts                 # Overlay server entry point (OverlayExpress)
+  src/TypeStampTopicManager.ts # Admits PushDrop outputs with typestamp protocol
+  src/TypeStampLookupService.ts# Indexes admitted outputs, handles lookup queries
+  src/TypeStampStorage.ts      # MongoDB storage for overlay-indexed stamps
 ```
 
 ## On-Chain Format
@@ -135,12 +159,23 @@ The token is locked to the creator's identity key, signed, and stored in the `ty
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| `POST` | `/api/typestamps` | Create a new stamp record |
+| `POST` | `/api/typestamps` | Create a stamp + submit BEEF to overlay |
 | `GET` | `/api/typestamps` | List stamps (by identity key or public) |
 | `GET` | `/api/typestamps/[txid]` | Get a single stamp |
 | `PATCH` | `/api/typestamps/[txid]` | Toggle visibility |
 | `DELETE` | `/api/typestamps/[txid]` | Delete a stamp (owner only) |
-| `GET` | `/api/typestamps/check` | Check for duplicate hash |
+| `GET` | `/api/overlay/check` | Check for duplicate hash via overlay |
+| `GET` | `/api/overlay/stamps` | Paginated stamps from overlay lookup |
+
+## Overlay Architecture
+
+When a stamp is created, the raw transaction (BEEF) is submitted to the overlay server running on port 8080. The overlay:
+
+1. **Topic Manager** (`tm_typestamp`) validates the PushDrop output matches the typestamp protocol
+2. **Lookup Service** (`ls_typestamp`) indexes admitted outputs into MongoDB with decoded fields
+3. **Lookup queries** support `findAll`, `findByHash`, and `findByIdentityKey`
+
+The `/overlaynetwork` page displays stamps indexed by the overlay, independent of the app's own MongoDB records.
 
 ## Deploy
 
@@ -148,4 +183,4 @@ The token is locked to the creator's identity key, signed, and stored in the `ty
 npm run build
 ```
 
-Deploy to Vercel and set the same environment variables in your project settings.
+Deploy to Vercel and set the same environment variables in your project settings. The overlay server needs to be hosted separately (e.g. on a VPS or cloud instance).
