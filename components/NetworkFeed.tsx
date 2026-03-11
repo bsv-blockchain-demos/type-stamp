@@ -16,6 +16,7 @@ export default function NetworkFeed() {
   const [total, setTotal] = useState(0)
   const [blockHeight, setBlockHeight] = useState<number | null>(null)
   const [isConnected, setIsConnected] = useState(false)
+  const [activeNodes, setActiveNodes] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -32,6 +33,7 @@ export default function NetworkFeed() {
       setStamps(stampsResult.value.stamps)
       setTotalPages(stampsResult.value.totalPages)
       setTotal(stampsResult.value.total)
+      setActiveNodes(stampsResult.value.activeNodes ?? 0)
       setIsConnected(true)
     } else {
       console.error('Failed to load overlay stamps:', stampsResult.reason)
@@ -61,7 +63,7 @@ export default function NetworkFeed() {
   return (
     <div>
       <OverlayHero blockHeight={blockHeight} isConnected={isConnected} />
-      <OverlayStats totalStamps={total} blockHeight={blockHeight} activeNodes={1} />
+      <OverlayStats totalStamps={total} blockHeight={blockHeight} activeNodes={activeNodes} />
       <OverlayTrustBanner />
       <OverlayEducation />
       <OverlayStampTable stamps={stamps} isLoading={isLoading} />

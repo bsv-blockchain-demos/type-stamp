@@ -70,11 +70,20 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Check if overlay node is reachable
+    let activeNodes = 0
+    const overlayUrl = process.env.OVERLAY_URL || 'http://localhost:8080'
+    try {
+      const health = await fetch(`${overlayUrl}/.well-known/host-info`, { signal: AbortSignal.timeout(3000) })
+      if (health.ok) activeNodes = 1
+    } catch { /* node unreachable */ }
+
     return NextResponse.json({
       stamps,
       page,
       totalPages: Math.ceil(total / limit),
       total,
+      activeNodes,
     })
   } catch (error) {
     console.error('GET /api/overlay/stamps error:', error)
