@@ -86,6 +86,7 @@ export default function NetworkFeed() {
       <div className="h-px bg-th-border" />
 
       <div>
+        <h2 className="text-2xl font-bold text-th-text mb-6">Public Overlay Registry</h2>
         <OverlayStampTable stamps={stamps} isLoading={isLoading} prevTxids={prevTxidsRef.current} />
         <OverlayPagination
           page={page}
