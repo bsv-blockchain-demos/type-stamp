@@ -15,6 +15,10 @@
     "dotenv": "^16.4.7",
     "mongodb": "^7.1.0"
   },
+  "overrides": {
+    "elliptic": "^6.6.1",
+    "base-x": "^3.0.11"
+  },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
     "tsx": "^4.19.0",
