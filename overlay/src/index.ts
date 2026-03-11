@@ -114,6 +114,10 @@ async function main() {
   await server.start()
   console.log(`TypeStamp Overlay running on port ${PORT}`)
 
+  // Re-nullify broadcaster after start() — start() may re-create TopicBroadcaster which
+  // causes OOM by broadcasting to every SHIP-discovered peer on the global network
+  engine.broadcaster = undefined
+
   // Now inject advertiser and run ads + GASP sync in the background
   const peerUrls = (process.env.OVERLAY_PEER_URLS || '').split(',').map(s => s.trim()).filter(Boolean)
   if (peerUrls.length > 0) console.log(`Peer overlay nodes: ${peerUrls.join(', ')}`)
