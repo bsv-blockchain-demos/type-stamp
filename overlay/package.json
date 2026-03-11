@@ -13,7 +13,8 @@
     "@bsv/sdk": "^2.0.6",
     "better-sqlite3": "^11.0.0",
     "dotenv": "^16.4.7",
-    "mongodb": "^7.1.0"
+    "mongodb": "^7.1.0",
+    "pg": "^8.20.0"
   },
   "overrides": {
     "elliptic": "^6.6.1",

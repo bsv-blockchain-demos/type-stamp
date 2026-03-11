@@ -91,7 +91,7 @@ export default function StampForm() {
 
   if (!isConnected) {
     return (
-      <div className="max-w-lg mx-auto rounded-xl border border-th-border bg-th-surface p-8 text-center shadow-sm">
+      <div className="max-w-lg mx-auto rounded-xl border border-th-border bg-th-surface p-8 text-center shadow-sm focus-within:shadow-[0_0_0_3px_rgba(249,115,22,0.15)] focus-within:border-orange-500/50 transition-all" style={{ animation: 'fade-in-scale 400ms ease-out 800ms both' }}>
         <h2 className="text-lg font-semibold mb-2">Connect Your Wallet</h2>
         <p className="text-th-text-secondary mb-4 text-sm">
           Connect a BSV wallet to start creating your typestamps on the blockchain.
@@ -107,7 +107,7 @@ export default function StampForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto rounded-xl border border-th-border bg-th-surface p-5 shadow-sm">
+    <form onSubmit={handleSubmit} className="max-w-lg mx-auto rounded-xl border border-th-border bg-th-surface p-5 shadow-sm focus-within:shadow-[0_0_0_3px_rgba(249,115,22,0.15)] focus-within:border-orange-500/50 transition-all" style={{ animation: 'fade-in-scale 400ms ease-out 800ms both' }}>
       <label htmlFor="content" className="block text-sm font-medium text-th-text-secondary mb-2">
         What do you want to stamp? <span className="text-red-500">*</span>
         <span className="relative ml-1 inline-block group">
@@ -126,7 +126,7 @@ export default function StampForm() {
         onChange={e => setContent(e.target.value)}
         placeholder="A word, phrase, idea, prediction..."
         maxLength={MAX_CHARS}
-        className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow"
+        className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm placeholder:text-th-text-muted focus:outline-none focus:border-orange-500 focus:shadow-[0_0_0_3px_rgba(249,115,22,0.2)] transition-shadow"
         disabled={isSubmitting}
       />
       <div className="mt-1 flex items-center justify-end text-xs text-th-text-muted mb-4">

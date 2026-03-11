@@ -38,27 +38,45 @@ export default function RecentStampsTeaser() {
   if (stamps.length === 0) return null
 
   return (
-    <div className="space-y-3">
-      {stamps.map(s => (
-        <div
-          key={s.txid}
-          className="flex items-center justify-between px-4 py-2 rounded-lg bg-th-surface hover:bg-th-surface-alt transition-colors cursor-pointer"
-          onClick={() => router.push(`/c/${s.txid}`)}
-        >
-          <span className="text-th-text text-sm truncate">
-            {s.isSealed ? '🔒 Sealed' : s.title}
-          </span>
-          <span className="text-th-text-muted text-xs whitespace-nowrap ml-3">
-            · {relativeTime(s.timestamp)}
-          </span>
-        </div>
-      ))}
-      <div className="text-center pt-1">
+    <div className="space-y-4">
+      {/* Divider label */}
+      <div className="flex items-center gap-4">
+        <div className="flex-1 h-px bg-th-border" />
+        <span className="text-xs uppercase tracking-widest text-th-text-muted">Recently Stamped</span>
+        <div className="flex-1 h-px bg-th-border" />
+      </div>
+
+      <div className="space-y-2">
+        {stamps.map((s, i) => (
+          <div
+            key={s.txid}
+            className="flex items-center justify-between px-4 py-2.5 rounded-lg bg-th-surface border-l-2 border-l-transparent hover:border-l-orange-500 hover:bg-orange-500/5 transition-all cursor-pointer"
+            style={{ animation: `fade-in-up 500ms ease-out ${i * 100}ms both` }}
+            onClick={() => router.push(`/c/${s.txid}`)}
+          >
+            <span className="text-th-text text-sm truncate">
+              {s.isSealed
+                ? <span className="italic text-orange-500">🔒 Sealed</span>
+                : s.title}
+            </span>
+            <span className="text-th-text-muted text-xs whitespace-nowrap ml-3">
+              · {relativeTime(s.timestamp)}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div className="text-center pt-2">
         <Link
           href="/overlaynetwork"
-          className="text-orange-500 hover:text-orange-400 text-sm font-medium transition-colors"
+          className="group inline-flex items-center gap-2 text-orange-500 hover:text-orange-400 text-base font-medium transition-colors"
         >
-          View all stamps on the Overlay Network →
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full bg-orange-500"
+            style={{ animation: 'pulse-dot 2s ease-in-out infinite' }}
+          />
+          View all stamps on the Overlay Network
+          <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
         </Link>
       </div>
     </div>

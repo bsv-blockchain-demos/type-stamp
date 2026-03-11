@@ -27,11 +27,16 @@ async function main() {
   await storage.ensureIndexes()
   console.log('Connected to MongoDB — overlay_typestamps collection ready')
 
-  const knexConfig = process.env.KNEX_URL || {
-    client: 'better-sqlite3',
-    connection: { filename: './data/overlay.db' },
-    useNullAsDefault: true,
-  }
+  const knexConfig = process.env.KNEX_URL
+    ? {
+        client: 'pg',
+        connection: process.env.KNEX_URL,
+      }
+    : {
+        client: 'better-sqlite3',
+        connection: { filename: './data/overlay.db' },
+        useNullAsDefault: true,
+      }
 
   const server = new OverlayExpress(
     'typestamp-overlay',

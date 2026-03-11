@@ -58,7 +58,9 @@ export default function OverlayStats({ totalStamps, blockHeight, activeNodes }: 
       {cards.map((card, i) => (
         <div
           key={card.label}
-          className={`rounded-xl border border-th-border border-l-4 ${cardConfig[i].borderClass} bg-th-surface p-5 flex items-center gap-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200`}
+          className={`rounded-xl border border-th-border border-l-4 ${
+            card.label.includes('Node') && activeNodes === 0 ? 'border-l-red-500' : cardConfig[i].borderClass
+          } bg-th-surface p-5 flex items-center gap-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200`}
           style={{ animation: `fade-in-up 500ms ease-out ${i * 100}ms both` }}
         >
           <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
@@ -69,7 +71,9 @@ export default function OverlayStats({ totalStamps, blockHeight, activeNodes }: 
             {card.icon}
           </div>
           <div>
-            <div className={`text-2xl font-bold ${cardConfig[i].textClass}`}>{card.value}</div>
+            <div className={`text-2xl font-bold ${
+              card.label.includes('Node') && activeNodes === 0 ? 'text-red-500' : cardConfig[i].textClass
+            }`}>{card.value}</div>
             <div className="text-sm text-th-text-muted">{card.label}</div>
           </div>
         </div>
