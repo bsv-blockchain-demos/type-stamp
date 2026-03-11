@@ -70,11 +70,10 @@ async function main() {
 
   const engine = (server as any).engine
 
-  // Disable the SDK's built-in broadcaster to prevent global network sync (causes OOM)
+  // Remove default advertiser + broadcaster before start() to prevent OOM
+  // LegacyNinjaAdvertiser pulls massive data from Dojo backend; broadcaster syncs with global network
+  engine.advertiser = undefined
   engine.broadcaster = undefined
-
-  // Don't set advertiser before start() — syncAdvertisements() hangs querying ls_ship/ls_slap
-  // We inject it after start() and run ads in the background instead
 
   // Manually register GASP sync routes (normally done by start() when enableGASPSync=true)
   const app = (server as any).app
