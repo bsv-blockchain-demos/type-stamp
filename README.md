@@ -1,4 +1,4 @@
-# TypeStamp
+# Typestamp
 
 Stake a timestamped, identity-bound claim on your ideas, works, IP, quotes, phrases, or any text by recording them on the BSV blockchain as PushDrop tokens.
 
@@ -8,15 +8,19 @@ Stake a timestamped, identity-bound claim on your ideas, works, IP, quotes, phra
 
 1. **Write** your stamp — an idea, quote, phrase, or any text you want to timestamp immutably on the blockchain
 2. **Choose visibility** — **Public** (text visible to everyone) or **Sealed** (only the SHA-256 hash is stored, content stays private)
-3. **Stamp it** — TypeStamp hashes the content and records a PushDrop token on BSV
+3. **Stamp it** — Typestamp hashes the content and records a PushDrop token on BSV
 4. **Share** the certificate link — anyone can verify the stamp without a wallet
 5. **Verify** — prove knowledge of sealed content by matching the original text against the on-chain hash at `/verify`
 6. **Manage** — toggle public/private visibility or delete stamps from My Stamps
 
 ## Features
 
-- **Public stamps** — text visible on the public registry and certificate page
+- **Public stamps** — text visible on the overlay network table and certificate page
 - **Sealed stamps** — content hidden, only the hash is stored on-chain and in the database. Prove knowledge via the verify page.
+- **Home page teaser** — 3 most recent stamps with relative time, linking to the full overlay table
+- **Overlay Network table** — 6 columns: Typestamp, Author, Identity Key, TXID (links to WhatsOnChain), Block height, Created At
+- **Block height caching** — block heights fetched from WhatsOnChain and cached in MongoDB
+- **Verify page** — redesigned with public/sealed explainer cards, match/no-match result states, and a "How verification works" accordion
 - **Delete stamps** — owner can delete a stamp, freeing the text for others to claim
 - **Duplicate detection** — identical text cannot be stamped twice
 - **Identity-bound** — each stamp is locked to the creator's identity key
@@ -30,7 +34,7 @@ Stake a timestamped, identity-bound claim on your ideas, works, IP, quotes, phra
 - **@bsv/sdk** — WalletClient, PushDrop, SecurityLevels
 - **@bsv/overlay-express** — Overlay server with custom topic manager and lookup service
 - **MongoDB Atlas** — stamp metadata, overlay indexing, duplicate detection
-- **WhatsOnChain API** — on-chain transaction verification
+- **WhatsOnChain API** — on-chain transaction verification, block height lookups
 
 ## Getting Started
 
@@ -86,7 +90,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ```
 app/
-  page.tsx                    # Home — stamp form + public feed
+  page.tsx                    # Home — stamp form + recent stamps teaser
   c/[txid]/page.tsx           # Certificate page (SSR + OG tags)
   overlaynetwork/page.tsx     # Overlay Network — live feed from overlay lookup
   verify/page.tsx             # Verify a stamp (no wallet needed)
@@ -94,20 +98,29 @@ app/
   api/typestamps/             # POST (create, submits BEEF to overlay) + GET (list)
   api/typestamps/[txid]/      # GET (single) + PATCH (visibility) + DELETE
   api/overlay/check/          # GET (duplicate check via overlay lookup)
-  api/overlay/stamps/         # GET (paginated stamps from overlay)
+  api/overlay/stamps/         # GET (paginated stamps from overlay, author + block height)
 
 components/
   WalletProvider.tsx           # React context for wallet state
   Header.tsx                   # Nav bar + wallet connect + theme toggle
   StampForm.tsx                # Content input + public/sealed mode + stamp flow
+  RecentStampsTeaser.tsx       # Home page — 3 most recent stamps with relative time
   NetworkFeed.tsx              # Overlay Network feed with pagination
-  PublicFeed.tsx               # Public registry table with pagination
   CertificateCard.tsx          # Certificate display + share + delete
   ShareButtons.tsx             # X + LinkedIn share
-  VerifyForm.tsx               # Verify content against on-chain hash
+  VerifyForm.tsx               # Verify content against on-chain hash (match/no-match states)
   MyTypeStampsList.tsx         # User's stamps with search, hash copy, visibility
   ThemeToggle.tsx              # Dark/light mode toggle
   Footer.tsx                   # Site footer
+
+  overlay/
+    OverlayStampTable.tsx      # 6-column table (Typestamp, Author, Identity Key, TXID, Block, Created At)
+    OverlayStats.tsx           # Active nodes, stamps indexed, current block cards
+    OverlayHero.tsx            # Overlay page header with live indicator
+    OverlayEducation.tsx       # Flow diagram explaining overlay architecture
+    OverlayTrustBanner.tsx     # Trust/immutability banner
+    OverlayPagination.tsx      # Pagination controls
+    types.ts                   # OverlayStamp interface
 
 lib/
   mongodb.ts                   # MongoDB connection singleton
@@ -118,12 +131,12 @@ lib/
   share.ts                     # Social share URL builders
 
 models/
-  typestamp.ts                 # TypeStamp interface + MongoDB collection helper
+  typestamp.ts                 # Typestamp interface + MongoDB collection helper
 
 overlay/
   src/index.ts                 # Overlay server entry point (OverlayExpress)
   src/TypeStampTopicManager.ts # Admits PushDrop outputs with typestamp protocol
-  src/TypeStampLookupService.ts# Indexes admitted outputs, handles lookup queries
+  src/TypeStampLookupService.ts# Indexes admitted outputs into MongoDB with decoded fields
   src/TypeStampStorage.ts      # MongoDB storage for overlay-indexed stamps
 ```
 
@@ -152,8 +165,9 @@ The token is locked to the creator's identity key, signed, and stored in the `ty
 | `timestamp` | Yes | Yes | Unix timestamp |
 | `isPublic` | No | Yes | Visibility in public feed |
 | `isSealed` | No | Yes | Whether content is hidden |
-| `displayName` | No | Yes | Creator's chosen display name |
+| `displayName` | No | Yes | Author's chosen display name |
 | `showIdentityKey` | No | Yes | Whether to show identity key publicly |
+| `blockHeight` | No | Yes (cached) | Block height from WhatsOnChain, cached on first lookup |
 
 ## API Routes
 
@@ -165,7 +179,7 @@ The token is locked to the creator's identity key, signed, and stored in the `ty
 | `PATCH` | `/api/typestamps/[txid]` | Toggle visibility |
 | `DELETE` | `/api/typestamps/[txid]` | Delete a stamp (owner only) |
 | `GET` | `/api/overlay/check` | Check for duplicate hash via overlay |
-| `GET` | `/api/overlay/stamps` | Paginated stamps from overlay lookup |
+| `GET` | `/api/overlay/stamps` | Paginated stamps from overlay (joins author by identityKey, fetches + caches block heights from WoC) |
 
 ## Overlay Architecture
 
@@ -175,7 +189,7 @@ When a stamp is created, the raw transaction (BEEF) is submitted to the overlay 
 2. **Lookup Service** (`ls_typestamp`) indexes admitted outputs into MongoDB with decoded fields
 3. **Lookup queries** support `findAll`, `findByHash`, and `findByIdentityKey`
 
-The `/overlaynetwork` page displays stamps indexed by the overlay, independent of the app's own MongoDB records.
+The `/overlaynetwork` page displays stamps indexed by the overlay, independent of the app's own MongoDB records. The overlay table shows 6 columns with TXID linking directly to WhatsOnChain and block heights cached from WoC API responses.
 
 ## Deploy
 
