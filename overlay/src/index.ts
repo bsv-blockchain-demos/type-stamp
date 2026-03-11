@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { mkdirSync } from 'fs'
 import OverlayExpress from '@bsv/overlay-express'
 import { WhatsOnChain, FetchHttpClient } from '@bsv/sdk'
 import { MongoClient } from 'mongodb'
@@ -26,6 +27,9 @@ async function main() {
   const storage = new TypeStampStorage(db)
   await storage.ensureIndexes()
   console.log('Connected to MongoDB — overlay_typestamps collection ready')
+
+  // Ensure data directory exists for SQLite
+  mkdirSync('./data', { recursive: true })
 
   const knexConfig = process.env.KNEX_URL
     ? {
