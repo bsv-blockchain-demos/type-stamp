@@ -319,7 +319,10 @@ export class DirectAdvertiser {
       try {
         const submitRes = await fetch(`${peerUrl}/submit`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Topics': JSON.stringify(taggedBEEF.topics),
+          },
           body: JSON.stringify(taggedBEEF)
         })
         const submitText = await submitRes.text()
