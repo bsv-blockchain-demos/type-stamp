@@ -235,8 +235,7 @@ export class DirectAdvertiser {
     // Filter to confirmed UTXOs only (height > 0) to ensure merkle proofs are available
     const confirmed = utxos.filter(u => u.height > 0)
     if (confirmed.length === 0) {
-      console.warn(`[DirectAdvertiser] All ${utxos.length} UTXOs are unconfirmed — skipping ad creation (will retry next restart)`)
-      return { beef: [], topics: [] }
+      throw new Error(`All ${utxos.length} UTXOs are unconfirmed — will retry next restart`)
     }
 
     // Sort by value descending, pick the largest confirmed UTXO
