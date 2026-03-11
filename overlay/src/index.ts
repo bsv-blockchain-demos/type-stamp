@@ -116,8 +116,8 @@ async function main() {
   console.log(`TypeStamp Overlay running on port ${PORT}`)
 
   // Run GASP sync in the background (non-blocking) after HTTP listener is up
-  engine.syncConfiguration = engine.syncConfiguration || {}
-  engine.syncConfiguration['tm_typestamp'] = 'SHIP'
+  // Only sync tm_typestamp between our nodes — skip tm_ship/tm_slap to avoid rate limits
+  engine.syncConfiguration = { 'tm_typestamp': 'SHIP' }
 
   setImmediate(async () => {
     try {
