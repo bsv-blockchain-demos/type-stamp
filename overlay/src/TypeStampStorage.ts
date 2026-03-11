@@ -53,6 +53,10 @@ export class TypeStampStorage {
     return { stamps, total }
   }
 
+  async count(): Promise<number> {
+    return this.collection.countDocuments()
+  }
+
   async deleteByTxid(txid: string, outputIndex: number): Promise<void> {
     await this.collection.deleteOne({ txid, outputIndex })
   }

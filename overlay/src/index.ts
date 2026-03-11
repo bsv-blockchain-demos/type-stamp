@@ -76,6 +76,19 @@ async function main() {
   engine.advertiser = advertiser
   advertiser.setEngine(engine)
 
+  // Add /stats endpoint before server.start() so it's available on the Express app
+  const app = (server as any).app
+  if (app) {
+    app.get('/stats', async (_req: any, res: any) => {
+      try {
+        const stamps = await storage.count()
+        res.json({ stamps })
+      } catch {
+        res.status(500).json({ stamps: 0 })
+      }
+    })
+  }
+
   // server.start() will call advertiser.setLookupEngine(engine) + engine.syncAdvertisements()
   await server.start()
   console.log(`TypeStamp Overlay running on port ${PORT}`)

@@ -18,6 +18,7 @@ export default function NetworkFeed() {
   const [blockHeight, setBlockHeight] = useState<number | null>(null)
   const [activeNodes, setActiveNodes] = useState(0)
   const [nodeUrls, setNodeUrls] = useState<string[]>([])
+  const [nodeStats, setNodeStats] = useState<{ url: string; stamps: number }[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const prevTxidsRef = useRef<Set<string> | undefined>(undefined)
@@ -43,6 +44,7 @@ export default function NetworkFeed() {
       setTotal(stampsResult.value.total)
       setActiveNodes(stampsResult.value.activeNodes ?? 0)
       setNodeUrls(stampsResult.value.nodeUrls ?? [])
+      setNodeStats(stampsResult.value.nodeStats ?? [])
     } else {
       console.error('Failed to load overlay stamps:', stampsResult.reason)
       setActiveNodes(0)
@@ -78,7 +80,7 @@ export default function NetworkFeed() {
 
       <OverlayEducation />
 
-      <OverlayNodePanel activeNodes={activeNodes} blockHeight={blockHeight} totalStamps={total} nodeUrls={nodeUrls} />
+      <OverlayNodePanel activeNodes={activeNodes} blockHeight={blockHeight} totalStamps={total} nodeUrls={nodeUrls} nodeStats={nodeStats} />
 
       <div>
         <div className="flex items-center gap-4 mb-4">

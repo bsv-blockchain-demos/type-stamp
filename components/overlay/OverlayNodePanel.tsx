@@ -1,11 +1,17 @@
+interface NodeStat {
+  url: string
+  stamps: number
+}
+
 interface OverlayNodePanelProps {
   activeNodes: number
   blockHeight: number | null
   totalStamps: number
   nodeUrls: string[]
+  nodeStats: NodeStat[]
 }
 
-export default function OverlayNodePanel({ activeNodes, blockHeight, totalStamps, nodeUrls }: OverlayNodePanelProps) {
+export default function OverlayNodePanel({ activeNodes, blockHeight, nodeUrls, nodeStats }: OverlayNodePanelProps) {
   return (
     <div style={{ animation: 'fade-in-up 500ms ease-out both' }}>
       {/* Divider label */}
@@ -25,6 +31,7 @@ export default function OverlayNodePanel({ activeNodes, blockHeight, totalStamps
           <div className="space-y-3">
             {nodeUrls.map((url, i) => {
               const host = url.replace(/^https?:\/\//, '')
+              const stat = nodeStats.find(s => s.url === url)
               return (
                 <div key={url} className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -38,20 +45,20 @@ export default function OverlayNodePanel({ activeNodes, blockHeight, totalStamps
                     </div>
                   </div>
 
-                  {i === 0 && (
-                    <div className="flex items-center gap-6 text-xs text-th-text-secondary">
+                  <div className="flex items-center gap-6 text-xs text-th-text-secondary">
+                    {stat && stat.stamps > 0 && (
                       <div>
                         <span className="text-th-text-muted">Stamps:</span>{' '}
-                        <span className="font-medium text-th-text">{totalStamps.toLocaleString()}</span>
+                        <span className="font-medium text-th-text">{stat.stamps.toLocaleString()}</span>
                       </div>
-                      {blockHeight != null && (
-                        <div>
-                          <span className="text-th-text-muted">Block:</span>{' '}
-                          <span className="font-medium text-th-text">#{blockHeight.toLocaleString()}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    )}
+                    {blockHeight != null && (
+                      <div>
+                        <span className="text-th-text-muted">Block:</span>{' '}
+                        <span className="font-medium text-th-text">#{blockHeight.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })}

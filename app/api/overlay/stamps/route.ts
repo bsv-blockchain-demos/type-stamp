@@ -97,6 +97,24 @@ export async function GET(req: NextRequest) {
     // Discover overlay nodes via SHIP
     const { activeNodes, nodeUrls } = await discoverOverlayNodes()
 
+    // Fetch per-node stats in parallel
+    const nodeStatsResults = await Promise.allSettled(
+      nodeUrls.map(url =>
+        fetch(`${url}/stats`, { signal: AbortSignal.timeout(3000) })
+          .then(r => r.ok ? r.json() : { stamps: 0 })
+          .then(data => ({ url, stamps: data.stamps ?? 0 }))
+      )
+    )
+    const nodeStats = nodeUrls.map(url => {
+      const result = nodeStatsResults.find(
+        r => r.status === 'fulfilled' && r.value.url === url
+      )
+      return {
+        url,
+        stamps: result?.status === 'fulfilled' ? result.value.stamps : 0,
+      }
+    })
+
     return NextResponse.json({
       stamps,
       page,
@@ -104,6 +122,7 @@ export async function GET(req: NextRequest) {
       total,
       activeNodes,
       nodeUrls,
+      nodeStats,
     })
   } catch (error) {
     console.error('GET /api/overlay/stamps error:', error)
