@@ -2,9 +2,10 @@ interface OverlayNodePanelProps {
   activeNodes: number
   blockHeight: number | null
   totalStamps: number
+  nodeUrls: string[]
 }
 
-export default function OverlayNodePanel({ activeNodes, blockHeight, totalStamps }: OverlayNodePanelProps) {
+export default function OverlayNodePanel({ activeNodes, blockHeight, totalStamps, nodeUrls }: OverlayNodePanelProps) {
   return (
     <div style={{ animation: 'fade-in-up 500ms ease-out both' }}>
       {/* Divider label */}
@@ -21,30 +22,39 @@ export default function OverlayNodePanel({ activeNodes, blockHeight, totalStamps
             No overlay nodes currently connected.
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-              </span>
-              <div>
-                <div className="text-sm font-medium text-th-text">Primary Node</div>
-                <div className="text-xs font-mono text-th-text-muted">localhost:8080</div>
-              </div>
-            </div>
+          <div className="space-y-3">
+            {nodeUrls.map((url, i) => {
+              const host = url.replace(/^https?:\/\//, '')
+              return (
+                <div key={url} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                    </span>
+                    <div>
+                      <div className="text-sm font-medium text-th-text">Node {i + 1}</div>
+                      <div className="text-xs font-mono text-th-text-muted">{host}</div>
+                    </div>
+                  </div>
 
-            <div className="flex items-center gap-6 text-xs text-th-text-secondary">
-              <div>
-                <span className="text-th-text-muted">Stamps:</span>{' '}
-                <span className="font-medium text-th-text">{totalStamps.toLocaleString()}</span>
-              </div>
-              {blockHeight != null && (
-                <div>
-                  <span className="text-th-text-muted">Block:</span>{' '}
-                  <span className="font-medium text-th-text">#{blockHeight.toLocaleString()}</span>
+                  {i === 0 && (
+                    <div className="flex items-center gap-6 text-xs text-th-text-secondary">
+                      <div>
+                        <span className="text-th-text-muted">Stamps:</span>{' '}
+                        <span className="font-medium text-th-text">{totalStamps.toLocaleString()}</span>
+                      </div>
+                      {blockHeight != null && (
+                        <div>
+                          <span className="text-th-text-muted">Block:</span>{' '}
+                          <span className="font-medium text-th-text">#{blockHeight.toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              )
+            })}
           </div>
         )}
 

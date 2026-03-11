@@ -17,6 +17,7 @@ export default function NetworkFeed() {
   const [total, setTotal] = useState(0)
   const [blockHeight, setBlockHeight] = useState<number | null>(null)
   const [activeNodes, setActiveNodes] = useState(0)
+  const [nodeUrls, setNodeUrls] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const prevTxidsRef = useRef<Set<string> | undefined>(undefined)
@@ -41,9 +42,11 @@ export default function NetworkFeed() {
       setTotalPages(stampsResult.value.totalPages)
       setTotal(stampsResult.value.total)
       setActiveNodes(stampsResult.value.activeNodes ?? 0)
+      setNodeUrls(stampsResult.value.nodeUrls ?? [])
     } else {
       console.error('Failed to load overlay stamps:', stampsResult.reason)
       setActiveNodes(0)
+      setNodeUrls([])
     }
 
     if (chainResult.status === 'fulfilled') {
@@ -78,7 +81,7 @@ export default function NetworkFeed() {
 
       <div className="h-px bg-th-border" />
 
-      <OverlayNodePanel activeNodes={activeNodes} blockHeight={blockHeight} totalStamps={total} />
+      <OverlayNodePanel activeNodes={activeNodes} blockHeight={blockHeight} totalStamps={total} nodeUrls={nodeUrls} />
 
       <div className="h-px bg-th-border" />
 

@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Discover overlay nodes via SHIP
-    const { activeNodes } = await discoverOverlayNodes()
+    const { activeNodes, nodeUrls } = await discoverOverlayNodes()
 
     return NextResponse.json({
       stamps,
@@ -91,6 +91,7 @@ export async function GET(req: NextRequest) {
       totalPages: Math.ceil(total / limit),
       total,
       activeNodes,
+      nodeUrls,
     })
   } catch (error) {
     console.error('GET /api/overlay/stamps error:', error)
