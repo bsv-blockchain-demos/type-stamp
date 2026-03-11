@@ -232,9 +232,16 @@ export class DirectAdvertiser {
       throw new Error(`No UTXOs found for ${address}`)
     }
 
-    // Sort by value descending, pick the largest
-    utxos.sort((a, b) => b.value - a.value)
-    const utxo = utxos[0]
+    // Filter to confirmed UTXOs only (height > 0) to ensure merkle proofs are available
+    const confirmed = utxos.filter(u => u.height > 0)
+    if (confirmed.length === 0) {
+      console.warn(`[DirectAdvertiser] All ${utxos.length} UTXOs are unconfirmed — skipping ad creation (will retry next restart)`)
+      return { beef: [], topics: [] }
+    }
+
+    // Sort by value descending, pick the largest confirmed UTXO
+    confirmed.sort((a, b) => b.value - a.value)
+    const utxo = confirmed[0]
 
     console.log(`[DirectAdvertiser] Using UTXO ${utxo.tx_hash}:${utxo.tx_pos} (${utxo.value} sats)`)
 

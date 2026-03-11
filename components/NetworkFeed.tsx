@@ -74,7 +74,6 @@ export default function NetworkFeed() {
       <div>
         <OverlayHero blockHeight={blockHeight} isConnected={activeNodes > 0} />
         <OverlayStats totalStamps={total} blockHeight={blockHeight} activeNodes={activeNodes} />
-        <OverlayTrustBanner blockHeight={blockHeight} />
       </div>
 
       <OverlayEducation />
@@ -96,6 +95,8 @@ export default function NetworkFeed() {
           onPageChange={setPage}
         />
       </div>
+
+      <OverlayTrustBanner blockHeight={blockHeight} />
     </div>
   )
 }

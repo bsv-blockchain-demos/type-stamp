@@ -30,23 +30,30 @@ export async function GET(req: NextRequest) {
       collection.countDocuments(overlayFilter),
     ])
 
-    // Join with typestamps collection to get displayName by identityKey
+    // Join with typestamps collection to get displayName (try txid first, then identityKey)
+    const txids = stamps.map(s => s.txid).filter(Boolean)
     const identityKeys = Array.from(new Set(
       stamps.map(s => s.identityKey).filter((k): k is string => !!k && k !== 'unknown')
     ))
-    if (identityKeys.length > 0) {
-      const appCollection = db.collection('typestamps')
+    const nameByTxid = new Map<string, string>()
+    const nameByKey = new Map<string, string>()
+    if (txids.length > 0 || identityKeys.length > 0) {
       const appDocs = await appCollection
-        .find({ identityKey: { $in: identityKeys } }, { projection: { identityKey: 1, displayName: 1 } })
+        .find(
+          { $or: [{ txid: { $in: txids } }, { identityKey: { $in: identityKeys } }] },
+          { projection: { txid: 1, identityKey: 1, displayName: 1 } }
+        )
         .toArray()
-      const nameMap = new Map<string, string>()
       for (const d of appDocs) {
-        if (d.displayName && !nameMap.has(d.identityKey)) {
-          nameMap.set(d.identityKey, d.displayName)
+        if (d.displayName) {
+          if (d.txid) nameByTxid.set(d.txid, d.displayName)
+          if (d.identityKey && !nameByKey.has(d.identityKey)) {
+            nameByKey.set(d.identityKey, d.displayName)
+          }
         }
       }
       for (const s of stamps) {
-        s.displayName = nameMap.get(s.identityKey) || ''
+        s.displayName = nameByTxid.get(s.txid) || nameByKey.get(s.identityKey) || ''
       }
     }
 

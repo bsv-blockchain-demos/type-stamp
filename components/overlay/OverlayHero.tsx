@@ -18,13 +18,11 @@ export default function OverlayHero({ blockHeight, isConnected }: OverlayHeroPro
         className="text-lg text-th-text-secondary mt-2"
         style={{ animation: 'fade-in-up 500ms ease-out 300ms both' }}
       >
-        Live data indexed from the BSV Blockchain.
-        <br />
-        Distributed across independent nodes — no single point of failure.
+        Live data indexed from the BSV Blockchain. Distributed across independent nodes — no single point of failure.
       </p>
 
       <div
-        className="mt-4 flex items-center gap-2 text-sm text-white dark:text-th-text bg-th-text/90 dark:bg-th-surface-alt px-4 py-2 rounded-full border border-th-border w-fit"
+        className="mt-4 flex items-center justify-center gap-2 text-sm text-white dark:text-th-text bg-th-text/90 dark:bg-th-surface-alt px-4 py-2 rounded-full border border-th-border"
         style={{ animation: 'fade-in-up 500ms ease-out 500ms both' }}
       >
         <span className="relative flex h-2.5 w-2.5">

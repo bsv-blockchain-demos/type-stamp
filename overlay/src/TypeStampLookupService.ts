@@ -15,6 +15,7 @@ export class TypeStampLookupService implements LookupService {
     outputScript: Script,
     topic: string
   ): Promise<void> {
+    if (topic !== 'tm_typestamp') return
     try {
       const decoded = PushDrop.decode(outputScript)
       if (!decoded?.fields || decoded.fields.length < 4) return
