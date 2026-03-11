@@ -68,17 +68,13 @@ async function main() {
   // Build the engine (SHIP/SLAP enabled by default)
   await server.configureEngine()
 
-  // Inject DirectAdvertiser to bypass Dojo wallet (P2PKH UTXOs are invisible to Dojo)
-  const peerUrls = (process.env.OVERLAY_PEER_URLS || '').split(',').map(s => s.trim()).filter(Boolean)
-  if (peerUrls.length > 0) console.log(`Peer overlay nodes: ${peerUrls.join(', ')}`)
-  const advertiser = new DirectAdvertiser(PRIVATE_KEY!, HOSTING_URL, peerUrls)
   const engine = (server as any).engine
-  engine.advertiser = advertiser
-  advertiser.setEngine(engine)
 
   // Disable the SDK's built-in broadcaster to prevent global network sync (causes OOM)
-  // Our DirectAdvertiser handles cross-submission to known peers instead
   engine.broadcaster = undefined
+
+  // Don't set advertiser before start() — syncAdvertisements() hangs querying ls_ship/ls_slap
+  // We inject it after start() and run ads in the background instead
 
   // Manually register GASP sync routes (normally done by start() when enableGASPSync=true)
   const app = (server as any).app
@@ -115,16 +111,30 @@ async function main() {
     })
   }
 
-  // start() skips GASP sync + routes since enableGASPSync=false, but our routes are already registered
+  // start() skips GASP sync + ads since enableGASPSync=false and no advertiser set
   await server.start()
   console.log(`TypeStamp Overlay running on port ${PORT}`)
 
-  // Run GASP sync in the background (non-blocking) after HTTP listener is up
-  // Only sync tm_typestamp between our nodes — skip tm_ship/tm_slap to avoid rate limits
-  engine.syncConfiguration = { 'tm_typestamp': 'SHIP' }
+  // Now inject advertiser and run ads + GASP sync in the background
+  const peerUrls = (process.env.OVERLAY_PEER_URLS || '').split(',').map(s => s.trim()).filter(Boolean)
+  if (peerUrls.length > 0) console.log(`Peer overlay nodes: ${peerUrls.join(', ')}`)
+  const advertiser = new DirectAdvertiser(PRIVATE_KEY!, HOSTING_URL, peerUrls)
+  engine.advertiser = advertiser
+  advertiser.setEngine(engine)
 
   setImmediate(async () => {
+    // Create SHIP/SLAP advertisements in the background
     try {
+      console.log('Syncing advertisements in background...')
+      await engine.syncAdvertisements()
+      console.log('Advertisement sync complete!')
+    } catch (err) {
+      console.warn('Advertisement sync error (non-fatal):', err)
+    }
+
+    // Run GASP sync for tm_typestamp only
+    try {
+      engine.syncConfiguration = { 'tm_typestamp': 'SHIP' }
       console.log('Starting GASP sync in background...')
       await engine.startGASPSync()
       console.log('GASP sync complete!')
