@@ -55,8 +55,8 @@ export default function Header() {
           {isLoading ? (
             <span className="text-sm text-th-text-muted">Connecting...</span>
           ) : isConnected ? (
-            <span className="text-sm text-orange-500 font-mono bg-th-surface-alt px-3 py-1.5 rounded-lg border border-th-border">
-              {truncatedKey}
+            <span className="text-sm text-white font-medium bg-th-text/90 dark:bg-th-surface-alt px-3 py-1.5 rounded-lg border border-th-border">
+              Wallet Connected
             </span>
           ) : (
             <button
