@@ -35,7 +35,7 @@ export default function OverlayEducation() {
           BSV blockchain. Instead of trusting a single database, overlay nodes independently verify
           and serve the same on-chain data — making it tamper-proof and censorship-resistant.
         </p>
-        <div className="mt-3 flex items-center gap-4">
+        <div className="mt-3">
           <a
             href="https://docs.bsvblockchain.org/overlay-services/overview"
             target="_blank"
@@ -43,14 +43,6 @@ export default function OverlayEducation() {
             className="text-sm text-orange-500 hover:text-orange-400 transition-colors font-medium"
           >
             View docs &rarr;
-          </a>
-          <a
-            href="https://docs.bsvblockchain.org/overlay-services/running-a-node"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-orange-500 hover:text-orange-400 transition-colors font-medium"
-          >
-            Run your own node &rarr;
           </a>
         </div>
       </div>

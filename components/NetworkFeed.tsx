@@ -79,14 +79,14 @@ export default function NetworkFeed() {
 
       <OverlayEducation />
 
-      <div className="h-px bg-th-border" />
-
       <OverlayNodePanel activeNodes={activeNodes} blockHeight={blockHeight} totalStamps={total} nodeUrls={nodeUrls} />
 
-      <div className="h-px bg-th-border" />
-
       <div>
-        <h2 className="text-2xl font-bold text-th-text mb-6">Public Overlay Registry</h2>
+        <div className="flex items-center gap-4 mb-4">
+          <div className="flex-1 h-px bg-th-border" />
+          <span className="text-xs font-medium uppercase tracking-wider text-th-text-muted">Public Overlay Registry</span>
+          <div className="flex-1 h-px bg-th-border" />
+        </div>
         <OverlayStampTable stamps={stamps} isLoading={isLoading} prevTxids={prevTxidsRef.current} />
         <OverlayPagination
           page={page}

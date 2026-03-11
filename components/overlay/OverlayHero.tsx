@@ -9,7 +9,7 @@ export default function OverlayHero({ blockHeight, isConnected }: OverlayHeroPro
   return (
     <div className="mb-8">
       <h1
-        className="text-4xl sm:text-5xl font-bold text-th-text"
+        className="text-3xl sm:text-4xl font-bold text-th-text"
         style={{ animation: 'fade-in-up 600ms ease-out both' }}
       >
         Overlay Network
@@ -18,7 +18,9 @@ export default function OverlayHero({ blockHeight, isConnected }: OverlayHeroPro
         className="text-lg text-th-text-secondary mt-2"
         style={{ animation: 'fade-in-up 500ms ease-out 300ms both' }}
       >
-        Live from the BSV Blockchain — not from Typestamp&apos;s database.
+        Live data indexed from the BSV Blockchain.
+        <br />
+        Distributed across independent nodes — no single point of failure.
       </p>
 
       <div
