@@ -59,7 +59,7 @@ async function main() {
     new TypeStampLookupService(storage)
   )
 
-  // Disable GASP sync — it blocks the HTTP listener from starting
+  // Disable built-in GASP sync (it blocks the HTTP listener); we run it in the background after start
   server.configureEnableGASPSync(false)
 
   // Provide an explicit chain tracker so WhatsOnChain can make HTTP requests in Node
@@ -92,6 +92,21 @@ async function main() {
   // server.start() will call advertiser.setLookupEngine(engine) + engine.syncAdvertisements()
   await server.start()
   console.log(`TypeStamp Overlay running on port ${PORT}`)
+
+  // Run GASP sync in the background (non-blocking) so nodes catch up with each other
+  // Re-enable sync config for tm_typestamp (was set to false to avoid blocking startup)
+  engine.syncConfiguration = engine.syncConfiguration || {}
+  engine.syncConfiguration['tm_typestamp'] = 'SHIP'
+
+  setImmediate(async () => {
+    try {
+      console.log('Starting GASP sync in background...')
+      await engine.startGASPSync()
+      console.log('GASP sync complete!')
+    } catch (err) {
+      console.warn('GASP sync error (non-fatal):', err)
+    }
+  })
 }
 
 main().catch(err => {
