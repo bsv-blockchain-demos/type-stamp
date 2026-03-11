@@ -59,8 +59,8 @@ async function main() {
     new TypeStampLookupService(storage)
   )
 
-  // Enable GASP sync — registers sync routes and runs peer sync on startup
-  server.configureEnableGASPSync(true)
+  // Disable GASP in config so start() doesn't block; we register routes + run sync manually
+  server.configureEnableGASPSync(false)
 
   // Provide an explicit chain tracker so WhatsOnChain can make HTTP requests in Node
   server.configureChainTracker(new WhatsOnChain('main', { httpClient: new FetchHttpClient(fetch) }))
@@ -76,9 +76,31 @@ async function main() {
   engine.advertiser = advertiser
   advertiser.setEngine(engine)
 
-  // Add /stats endpoint before server.start() so it's available on the Express app
+  // Manually register GASP sync routes (normally done by start() when enableGASPSync=true)
   const app = (server as any).app
   if (app) {
+    app.post('/requestSyncResponse', async (req: any, res: any) => {
+      try {
+        const topic = req.headers['x-bsv-topic'] as string
+        const response = await engine.provideForeignSyncResponse(req.body, topic)
+        res.status(200).json(response)
+      } catch (error: any) {
+        console.error('Error in /requestSyncResponse:', error)
+        res.status(400).json({ status: 'error', message: error?.message || 'Unknown error' })
+      }
+    })
+
+    app.post('/requestForeignGASPNode', async (req: any, res: any) => {
+      try {
+        const { graphID, txid, outputIndex } = req.body
+        const response = await engine.provideForeignGASPNode(graphID, txid, outputIndex)
+        res.status(200).json(response)
+      } catch (error: any) {
+        console.error('Error in /requestForeignGASPNode:', error)
+        res.status(400).json({ status: 'error', message: error?.message || 'Unknown error' })
+      }
+    })
+
     app.get('/stats', async (_req: any, res: any) => {
       try {
         const stamps = await storage.count()
@@ -89,10 +111,23 @@ async function main() {
     })
   }
 
-  // server.start() will call advertiser.setLookupEngine(engine) + engine.syncAdvertisements()
+  // start() skips GASP sync + routes since enableGASPSync=false, but our routes are already registered
   await server.start()
   console.log(`TypeStamp Overlay running on port ${PORT}`)
 
+  // Run GASP sync in the background (non-blocking) after HTTP listener is up
+  engine.syncConfiguration = engine.syncConfiguration || {}
+  engine.syncConfiguration['tm_typestamp'] = 'SHIP'
+
+  setImmediate(async () => {
+    try {
+      console.log('Starting GASP sync in background...')
+      await engine.startGASPSync()
+      console.log('GASP sync complete!')
+    } catch (err) {
+      console.warn('GASP sync error (non-fatal):', err)
+    }
+  })
 }
 
 main().catch(err => {
