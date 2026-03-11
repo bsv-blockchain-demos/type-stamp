@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { mkdirSync } from 'fs'
+import express from 'express'
 import OverlayExpress from '@bsv/overlay-express'
 import { WhatsOnChain, FetchHttpClient } from '@bsv/sdk'
 import { MongoClient } from 'mongodb'
@@ -76,9 +77,11 @@ async function main() {
   engine.broadcaster = undefined
 
   // Manually register GASP sync routes (normally done by start() when enableGASPSync=true)
+  // Must add JSON parser here because start() registers bodyParser AFTER our routes
   const app = (server as any).app
+  const jsonParser = express.json({ limit: '1gb', type: 'application/json' })
   if (app) {
-    app.post('/requestSyncResponse', async (req: any, res: any) => {
+    app.post('/requestSyncResponse', jsonParser, async (req: any, res: any) => {
       try {
         const topic = req.headers['x-bsv-topic'] as string
         console.log(`[GASP] /requestSyncResponse called for topic: ${topic}`)
@@ -91,7 +94,7 @@ async function main() {
       }
     })
 
-    app.post('/requestForeignGASPNode', async (req: any, res: any) => {
+    app.post('/requestForeignGASPNode', jsonParser, async (req: any, res: any) => {
       try {
         const { graphID, txid, outputIndex } = req.body
         const response = await engine.provideForeignGASPNode(graphID, txid, outputIndex)
