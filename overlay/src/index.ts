@@ -31,10 +31,11 @@ async function main() {
   // Ensure data directory exists for SQLite
   mkdirSync('./data', { recursive: true })
 
-  const knexConfig = process.env.KNEX_URL
+  const knexUrl = process.env.KNEX_URL
+  const knexConfig = knexUrl
     ? {
-        client: 'pg',
-        connection: process.env.KNEX_URL,
+        client: knexUrl.startsWith('mysql') ? 'mysql2' : 'pg',
+        connection: knexUrl,
       }
     : {
         client: 'better-sqlite3',
