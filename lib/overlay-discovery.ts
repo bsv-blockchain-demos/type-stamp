@@ -27,6 +27,15 @@ export async function discoverOverlayNodes(): Promise<DiscoveryResult> {
   const bootstrapUrl = process.env.OVERLAY_URL || 'http://localhost:8080'
   const discoveredUrls = new Set<string>()
 
+  // Seed known node URLs from env (comma-separated)
+  const knownUrls = process.env.OVERLAY_URLS
+  if (knownUrls) {
+    for (const u of knownUrls.split(',')) {
+      const trimmed = u.trim()
+      if (trimmed) discoveredUrls.add(trimmed.replace(/\/+$/, ''))
+    }
+  }
+
   try {
     // Query SHIP for nodes advertising tm_typestamp
     const res = await fetch(`${bootstrapUrl}/lookup`, {
