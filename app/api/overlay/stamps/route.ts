@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/mongodb'
 
+const WOC_BASE = process.env.NEXT_PUBLIC_WOC_BASE || 'https://api.whatsonchain.com/v1/bsv/main'
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -15,6 +17,58 @@ export async function GET(req: NextRequest) {
       collection.find().sort({ timestamp: -1 }).skip(skip).limit(limit).toArray(),
       collection.countDocuments(),
     ])
+
+    // Join with typestamps collection to get displayName by identityKey
+    const identityKeys = Array.from(new Set(
+      stamps.map(s => s.identityKey).filter((k): k is string => !!k && k !== 'unknown')
+    ))
+    if (identityKeys.length > 0) {
+      const appCollection = db.collection('typestamps')
+      const appDocs = await appCollection
+        .find({ identityKey: { $in: identityKeys } }, { projection: { identityKey: 1, displayName: 1 } })
+        .toArray()
+      const nameMap = new Map<string, string>()
+      for (const d of appDocs) {
+        if (d.displayName && !nameMap.has(d.identityKey)) {
+          nameMap.set(d.identityKey, d.displayName)
+        }
+      }
+      for (const s of stamps) {
+        s.displayName = nameMap.get(s.identityKey) || ''
+      }
+    }
+
+    // Fetch block heights from WoC for stamps missing blockHeight
+    const needHeight = stamps.filter(s => s.blockHeight == null && s.txid)
+    if (needHeight.length > 0) {
+      const results = await Promise.allSettled(
+        needHeight.map(s =>
+          fetch(`${WOC_BASE}/tx/hash/${s.txid}`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => ({ txid: s.txid, blockHeight: data?.blockheight ?? null }))
+        )
+      )
+      const updates: { txid: string; blockHeight: number }[] = []
+      for (const r of results) {
+        if (r.status === 'fulfilled' && r.value.blockHeight != null) {
+          updates.push(r.value as { txid: string; blockHeight: number })
+        }
+      }
+      // Backfill into DB and merge into response
+      if (updates.length > 0) {
+        const heightMap = new Map(updates.map(u => [u.txid, u.blockHeight]))
+        await Promise.allSettled(
+          updates.map(u =>
+            collection.updateOne({ txid: u.txid }, { $set: { blockHeight: u.blockHeight } })
+          )
+        )
+        for (const s of stamps) {
+          if (s.blockHeight == null && heightMap.has(s.txid)) {
+            s.blockHeight = heightMap.get(s.txid)
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       stamps,

@@ -138,7 +138,7 @@ export default function StampForm() {
       </div>
 
       <label htmlFor="displayName" className="block text-sm font-medium text-th-text-secondary mb-2">
-        Display Name <span className="text-red-500">*</span>
+        Author <span className="text-red-500">*</span>
       </label>
       <input
         id="displayName"
@@ -166,6 +166,14 @@ export default function StampForm() {
             />
             <span className={`text-sm text-th-text ${!isSealed ? 'font-semibold' : ''}`}>Public</span>
             <span className="text-xs text-th-text-muted">Your text is visible to everyone</span>
+            <span className="relative inline-block group" onClick={e => e.preventDefault()}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-th-text-muted cursor-help">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.94 6.94a.75.75 0 11-1.061-1.061 3 3 0 112.871 5.026v.345a.75.75 0 01-1.5 0v-.5c0-.72.57-1.172 1.081-1.287A1.5 1.5 0 108.94 6.94zM10 15a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[280px] rounded-lg bg-th-text text-th-bg text-xs p-2.5 leading-relaxed opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-10 shadow-lg">
+                Your text is permanently recorded on the BSV blockchain — visible to everyone. The exact content, your identity key, and a timestamp are stored on-chain. Once stamped, it cannot be modified or deleted by anyone, including Typestamp.
+              </span>
+            </span>
           </label>
 
           <label className={`flex items-center gap-3 cursor-pointer ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}>
@@ -184,6 +192,14 @@ export default function StampForm() {
               </svg>
             </span>
             <span className="text-xs text-th-text-muted">Only the hash is stored. Content stays private.</span>
+            <span className="relative inline-block group" onClick={e => e.preventDefault()}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-th-text-muted cursor-help">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.94 6.94a.75.75 0 11-1.061-1.061 3 3 0 112.871 5.026v.345a.75.75 0 01-1.5 0v-.5c0-.72.57-1.172 1.081-1.287A1.5 1.5 0 108.94 6.94zM10 15a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+              </svg>
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[280px] rounded-lg bg-th-text text-th-bg text-xs p-2.5 leading-relaxed opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-10 shadow-lg">
+                Only the SHA-256 hash of your text is stored on-chain — your actual content stays completely private. To prove your claim later, share your original text with anyone and they can verify it matches the on-chain hash at the Verify page. The hash is mathematically unique — identical text always produces the same hash, so any attempt to claim the same content will be detected.
+              </span>
+            </span>
           </label>
         </fieldset>
 

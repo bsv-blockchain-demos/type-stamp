@@ -1,7 +1,7 @@
 import MyTypeStampsList from '@/components/MyTypeStampsList'
 
 export const metadata = {
-  title: 'My Stamps — TypeStamp',
+  title: 'My Stamps — Typestamp',
   description: 'View and manage your stamps.',
 }
 

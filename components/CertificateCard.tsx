@@ -181,7 +181,7 @@ export default function CertificateCard({
           </div>
         ) : (
           <blockquote className="text-2xl sm:text-3xl font-bold text-th-text leading-snug text-center">
-            &ldquo;{content || title}&rdquo;
+            {content || title}
           </blockquote>
         )}
 

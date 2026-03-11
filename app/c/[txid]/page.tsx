@@ -43,23 +43,23 @@ async function getOnChainData(txid: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const typestamp = await getTypeStamp(params.txid)
-  const title = typestamp?.title || 'TypeStamp Certificate'
+  const title = typestamp?.title || 'Typestamp Certificate'
   const description = `Verified typestamp on BSV blockchain — TXID: ${params.txid.slice(0, 16)}...`
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   return {
-    title: `${title} — TypeStamp`,
+    title: `${title} — Typestamp`,
     description,
     openGraph: {
-      title: `${title} — TypeStamp`,
+      title: `${title} — Typestamp`,
       description,
       url: `${appUrl}/c/${params.txid}`,
-      siteName: 'TypeStamp',
+      siteName: 'Typestamp',
       type: 'article',
     },
     twitter: {
       card: 'summary',
-      title: `${title} — TypeStamp`,
+      title: `${title} — Typestamp`,
       description,
     },
   }
@@ -71,7 +71,7 @@ export default async function CertificatePage({ params, searchParams }: Props) {
 
   // Use DB data first, then on-chain data, then query params (for freshly created stamps)
   const qp = searchParams
-  const title = typestamp?.title || decoded?.title || (qp.title as string) || 'Unknown TypeStamp'
+  const title = typestamp?.title || decoded?.title || (qp.title as string) || 'Unknown Typestamp'
   const content = typestamp?.content || (qp.content as string) || undefined
   const identityKey = typestamp?.identityKey || decoded?.lockingPublicKey || (qp.identityKey as string) || 'Unknown'
   const displayName = typestamp?.displayName || (qp.displayName as string) || undefined

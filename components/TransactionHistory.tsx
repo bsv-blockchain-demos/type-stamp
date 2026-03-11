@@ -175,7 +175,7 @@ export default function TransactionHistory({ txid }: { txid: string }) {
                       <td className="px-4 py-2 font-mono text-xs text-th-text-secondary">
                         {output.scriptPubKey.addresses?.[0]
                           ? truncate(output.scriptPubKey.addresses[0])
-                          : <span className="italic text-orange-500">{output.scriptPubKey.type === 'nonstandard' ? 'TypeStamp Token' : output.scriptPubKey.type}</span>
+                          : <span className="italic text-orange-500">{output.scriptPubKey.type === 'nonstandard' ? 'Typestamp Token' : output.scriptPubKey.type}</span>
                         }
                       </td>
                       <td className="px-4 py-2 text-right text-th-text-secondary">{output.value.toFixed(8)}</td>

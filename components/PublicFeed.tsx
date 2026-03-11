@@ -78,7 +78,7 @@ export default function PublicFeed() {
         <table className="w-full text-sm text-left">
           <thead className="bg-th-surface text-th-text-muted text-xs uppercase tracking-wider">
             <tr>
-              <th className="px-4 py-3">TypeStamp</th>
+              <th className="px-4 py-3">Typestamp</th>
               <th className="px-4 py-3 whitespace-nowrap">Display Name</th>
               <th className="px-4 py-3 whitespace-nowrap">Identity Key</th>
               <th className="px-4 py-3 whitespace-nowrap">TXID</th>

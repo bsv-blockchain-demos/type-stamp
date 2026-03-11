@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="border-t border-th-border bg-th-surface/80">
       <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
         <div className="text-sm text-th-text-muted">
-          <span className="font-bold bg-gradient-to-r from-orange-500 to-amber-400 bg-clip-text text-transparent">TypeStamp</span>
+          <span className="font-bold bg-gradient-to-r from-orange-500 to-amber-400 bg-clip-text text-transparent">Typestamp</span>
           {' '}&mdash; Proof of authorship on BSV.
         </div>
         <a

@@ -31,7 +31,7 @@ export default function Header() {
       <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-xl font-bold tracking-tight bg-gradient-to-r from-orange-500 to-amber-400 bg-clip-text text-transparent">
-            TypeStamp
+            Typestamp
           </Link>
           <nav className="hidden sm:flex items-center gap-1 text-sm">
             {navLinks.map(({ href, label }) => (

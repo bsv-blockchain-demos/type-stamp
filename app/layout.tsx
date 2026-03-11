@@ -17,7 +17,7 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'TypeStamp — Tokenize and Timestamp on BSV',
+  title: 'Typestamp — Tokenize and Timestamp on BSV',
   description: 'Create a timestamped, identity-bound typestamp on any text by recording it on the BSV blockchain.',
 }
 
