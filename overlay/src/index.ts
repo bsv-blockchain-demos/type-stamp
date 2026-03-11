@@ -127,6 +127,9 @@ async function main() {
   advertiser.setEngine(engine)
 
   setImmediate(async () => {
+    // Kill broadcaster right before submit — start() may re-create it asynchronously
+    engine.broadcaster = { broadcast: async () => ({ status: 'success', txid: '', message: 'no-op' }) } as any
+
     // Create SHIP/SLAP advertisements directly (skip syncAdvertisements which OOMs on ls_ship/ls_slap lookup)
     try {
       const topics = Object.keys(engine.managers)
