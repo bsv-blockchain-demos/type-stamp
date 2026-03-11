@@ -11,7 +11,7 @@ export default function OverlayNodePanel({ activeNodes, blockHeight, totalStamps
       {/* Divider label */}
       <div className="flex items-center gap-4 mb-4">
         <div className="flex-1 h-px bg-th-border" />
-        <span className="text-xs font-medium uppercase tracking-wider text-th-text-muted">Connected Nodes</span>
+        <span className="text-xs font-medium uppercase tracking-wider text-th-text-muted">Connected Overlay Nodes</span>
         <div className="flex-1 h-px bg-th-border" />
       </div>
 
@@ -33,7 +33,7 @@ export default function OverlayNodePanel({ activeNodes, blockHeight, totalStamps
                       <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
                     </span>
                     <div>
-                      <div className="text-sm font-medium text-th-text">Node {i + 1}</div>
+                      <div className="text-sm font-medium text-th-text">Overlay Node {i + 1}</div>
                       <div className="text-xs font-mono text-th-text-muted">{host}</div>
                     </div>
                   </div>

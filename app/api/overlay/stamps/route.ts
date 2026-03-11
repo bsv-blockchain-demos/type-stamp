@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const identityKeys = Array.from(new Set(
       stamps.map(s => s.identityKey).filter((k): k is string => !!k && k !== 'unknown')
     ))
-    const nameByTxid = new Map<string, string>()
+    const appByTxid = new Map<string, { displayName?: string; identityKey?: string }>()
     const nameByKey = new Map<string, string>()
     if (txids.length > 0 || identityKeys.length > 0) {
       const appDocs = await appCollection
@@ -45,15 +45,20 @@ export async function GET(req: NextRequest) {
         )
         .toArray()
       for (const d of appDocs) {
-        if (d.displayName) {
-          if (d.txid) nameByTxid.set(d.txid, d.displayName)
-          if (d.identityKey && !nameByKey.has(d.identityKey)) {
-            nameByKey.set(d.identityKey, d.displayName)
-          }
+        if (d.txid) appByTxid.set(d.txid, { displayName: d.displayName, identityKey: d.identityKey })
+        if (d.displayName && d.identityKey && !nameByKey.has(d.identityKey)) {
+          nameByKey.set(d.identityKey, d.displayName)
         }
       }
       for (const s of stamps) {
-        s.displayName = nameByTxid.get(s.txid) || nameByKey.get(s.identityKey) || ''
+        const appDoc = appByTxid.get(s.txid)
+        if (appDoc) {
+          // Override the derived locking key with the real identity key from the app
+          if (appDoc.identityKey) s.identityKey = appDoc.identityKey
+          if (appDoc.displayName) s.displayName = appDoc.displayName
+        } else {
+          s.displayName = nameByKey.get(s.identityKey) || ''
+        }
       }
     }
 

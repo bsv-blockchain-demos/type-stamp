@@ -79,11 +79,6 @@ export default function OverlayStampTable({ stamps, isLoading, prevTxids }: Over
                     ) : (
                       <span className="truncate">{s.title}</span>
                     )}
-                    {isNew && (
-                      <span className="flex-shrink-0 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                        NEW
-                      </span>
-                    )}
                   </span>
                 </td>
                 <td className="px-3 py-3 truncate text-th-text-secondary">
