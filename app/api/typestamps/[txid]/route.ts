@@ -3,11 +3,12 @@ import { getTypeStampsCollection } from '@/models/typestamp'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { txid: string } }
+  props: { params: Promise<{ txid: string }> }
 ) {
   try {
+    const { txid } = await props.params
     const collection = await getTypeStampsCollection()
-    const typestamp = await collection.findOne({ txid: params.txid })
+    const typestamp = await collection.findOne({ txid })
 
     if (!typestamp) {
       return NextResponse.json({ error: 'TypeStamp not found' }, { status: 404 })
@@ -33,9 +34,10 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { txid: string } }
+  props: { params: Promise<{ txid: string }> }
 ) {
   try {
+    const { txid } = await props.params
     const { searchParams } = new URL(req.url)
     const identityKey = searchParams.get('identityKey')
 
@@ -44,7 +46,7 @@ export async function DELETE(
     }
 
     const collection = await getTypeStampsCollection()
-    const typestamp = await collection.findOne({ txid: params.txid })
+    const typestamp = await collection.findOne({ txid })
 
     if (!typestamp) {
       return NextResponse.json({ error: 'TypeStamp not found' }, { status: 404 })
@@ -54,9 +56,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    await collection.deleteOne({ txid: params.txid })
+    await collection.deleteOne({ txid })
 
-    return NextResponse.json({ success: true, txid: params.txid })
+    return NextResponse.json({ success: true, txid })
   } catch (error) {
     console.error('DELETE /api/typestamps/[txid] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -65,9 +67,10 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { txid: string } }
+  props: { params: Promise<{ txid: string }> }
 ) {
   try {
+    const { txid } = await props.params
     const body = await req.json()
     const { identityKey, isPublic } = body
 
@@ -76,7 +79,7 @@ export async function PATCH(
     }
 
     const collection = await getTypeStampsCollection()
-    const typestamp = await collection.findOne({ txid: params.txid })
+    const typestamp = await collection.findOne({ txid })
 
     if (!typestamp) {
       return NextResponse.json({ error: 'TypeStamp not found' }, { status: 404 })
@@ -87,11 +90,11 @@ export async function PATCH(
     }
 
     await collection.updateOne(
-      { txid: params.txid },
+      { txid },
       { $set: { isPublic } }
     )
 
-    return NextResponse.json({ success: true, txid: params.txid, isPublic })
+    return NextResponse.json({ success: true, txid, isPublic })
   } catch (error) {
     console.error('PATCH /api/typestamps/[txid] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

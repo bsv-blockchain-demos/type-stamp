@@ -265,7 +265,7 @@ export default function CertificateCard({
 
           <Link
             href={`/verify?txid=${txid}`}
-            className="text-sm text-orange-500 hover:text-orange-400 transition-colors"
+            className="text-sm text-orange-500 hover:text-orange-400 transition-colors text-center"
           >
             Verify Your Version &rarr;
           </Link>

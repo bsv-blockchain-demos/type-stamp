@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import CertificateCard from '@/components/CertificateCard'
 
 interface Props {
-  params: { txid: string }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ txid: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 async function getTypeStamp(txid: string) {
@@ -41,10 +41,11 @@ async function getOnChainData(txid: string) {
   }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const typestamp = await getTypeStamp(params.txid)
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const { txid } = await props.params
+  const typestamp = await getTypeStamp(txid)
   const title = typestamp?.title || 'Typestamp Certificate'
-  const description = `Verified typestamp on BSV blockchain — TXID: ${params.txid.slice(0, 16)}...`
+  const description = `Verified typestamp on BSV blockchain — TXID: ${txid.slice(0, 16)}...`
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   return {
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: `${title} — Typestamp`,
       description,
-      url: `${appUrl}/c/${params.txid}`,
+      url: `${appUrl}/c/${txid}`,
       siteName: 'Typestamp',
       type: 'article',
     },
@@ -65,9 +66,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function CertificatePage({ params, searchParams }: Props) {
-  const typestamp = await getTypeStamp(params.txid)
-  const { details, decoded } = await getOnChainData(params.txid)
+export default async function CertificatePage(props: Props) {
+  const { txid } = await props.params
+  const searchParams = await props.searchParams
+  const typestamp = await getTypeStamp(txid)
+  const { details, decoded } = await getOnChainData(txid)
 
   // Use DB data first, then on-chain data, then query params (for freshly created stamps)
   const qp = searchParams
@@ -82,7 +85,7 @@ export default async function CertificatePage({ params, searchParams }: Props) {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <CertificateCard
-        txid={params.txid}
+        txid={txid}
         title={title}
         content={content}
         identityKey={identityKey}
