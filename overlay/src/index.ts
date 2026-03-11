@@ -122,13 +122,22 @@ async function main() {
   advertiser.setEngine(engine)
 
   setImmediate(async () => {
-    // Create SHIP/SLAP advertisements in the background
+    // Create SHIP/SLAP advertisements directly (skip syncAdvertisements which OOMs on ls_ship/ls_slap lookup)
     try {
-      console.log('Syncing advertisements in background...')
-      await engine.syncAdvertisements()
-      console.log('Advertisement sync complete!')
+      const topics = Object.keys(engine.managers)
+      const services = Object.keys(engine.lookupServices)
+      const adsData = [
+        ...topics.map((t: string) => ({ protocol: 'SHIP' as const, topicOrServiceName: t })),
+        ...services.map((s: string) => ({ protocol: 'SLAP' as const, topicOrServiceName: s })),
+      ]
+      console.log(`Creating ${adsData.length} SHIP/SLAP advertisements...`)
+      const taggedBEEF = await advertiser.createAdvertisements(adsData)
+      if (taggedBEEF.beef.length > 0) {
+        await engine.submit(taggedBEEF)
+        console.log('Advertisements created and submitted!')
+      }
     } catch (err) {
-      console.warn('Advertisement sync error (non-fatal):', err)
+      console.warn('Advertisement creation error (non-fatal):', err)
     }
 
     // Run GASP sync for tm_typestamp only
