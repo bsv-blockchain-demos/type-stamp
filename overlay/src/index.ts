@@ -6,6 +6,7 @@ import { MongoClient } from 'mongodb'
 import { TypeStampTopicManager } from './TypeStampTopicManager.js'
 import { TypeStampLookupService } from './TypeStampLookupService.js'
 import { TypeStampStorage } from './TypeStampStorage.js'
+import { DirectAdvertiser } from './DirectAdvertiser.js'
 
 const PRIVATE_KEY = process.env.OVERLAY_PRIVATE_KEY || process.env.SERVER_PRIVATE_KEY
 const HOSTING_URL = process.env.OVERLAY_HOSTING_URL || 'http://localhost:8080'
@@ -66,6 +67,16 @@ async function main() {
 
   // Build the engine (SHIP/SLAP enabled by default)
   await server.configureEngine()
+
+  // Inject DirectAdvertiser to bypass Dojo wallet (P2PKH UTXOs are invisible to Dojo)
+  const peerUrls = (process.env.OVERLAY_PEER_URLS || '').split(',').map(s => s.trim()).filter(Boolean)
+  if (peerUrls.length > 0) console.log(`Peer overlay nodes: ${peerUrls.join(', ')}`)
+  const advertiser = new DirectAdvertiser(PRIVATE_KEY!, HOSTING_URL, peerUrls)
+  const engine = (server as any).engine
+  engine.advertiser = advertiser
+  advertiser.setEngine(engine)
+
+  // server.start() will call advertiser.setLookupEngine(engine) + engine.syncAdvertisements()
   await server.start()
   console.log(`TypeStamp Overlay running on port ${PORT}`)
 }
