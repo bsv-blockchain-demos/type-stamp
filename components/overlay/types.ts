@@ -7,5 +7,6 @@ export interface OverlayStamp {
   identityKey: string
   isSealed: boolean
   displayName?: string
+  showIdentityKey?: boolean
   blockHeight?: number
 }

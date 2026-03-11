@@ -35,17 +35,17 @@ export async function GET(req: NextRequest) {
     const identityKeys = Array.from(new Set(
       stamps.map(s => s.identityKey).filter((k): k is string => !!k && k !== 'unknown')
     ))
-    const appByTxid = new Map<string, { displayName?: string; identityKey?: string }>()
+    const appByTxid = new Map<string, { displayName?: string; identityKey?: string; showIdentityKey?: boolean }>()
     const nameByKey = new Map<string, string>()
     if (txids.length > 0 || identityKeys.length > 0) {
       const appDocs = await appCollection
         .find(
           { $or: [{ txid: { $in: txids } }, { identityKey: { $in: identityKeys } }] },
-          { projection: { txid: 1, identityKey: 1, displayName: 1 } }
+          { projection: { txid: 1, identityKey: 1, displayName: 1, showIdentityKey: 1 } }
         )
         .toArray()
       for (const d of appDocs) {
-        if (d.txid) appByTxid.set(d.txid, { displayName: d.displayName, identityKey: d.identityKey })
+        if (d.txid) appByTxid.set(d.txid, { displayName: d.displayName, identityKey: d.identityKey, showIdentityKey: d.showIdentityKey })
         if (d.displayName && d.identityKey && !nameByKey.has(d.identityKey)) {
           nameByKey.set(d.identityKey, d.displayName)
         }
@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
           // Override the derived locking key with the real identity key from the app
           if (appDoc.identityKey) s.identityKey = appDoc.identityKey
           if (appDoc.displayName) s.displayName = appDoc.displayName
+          s.showIdentityKey = appDoc.showIdentityKey !== false
         } else {
           s.displayName = nameByKey.get(s.identityKey) || ''
         }

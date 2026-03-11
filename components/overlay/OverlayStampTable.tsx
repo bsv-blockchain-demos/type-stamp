@@ -85,9 +85,11 @@ export default function OverlayStampTable({ stamps, isLoading, prevTxids }: Over
                   {s.displayName || '\u2014'}
                 </td>
                 <td className="px-3 py-3 truncate font-mono text-xs text-th-text-muted">
-                  {s.identityKey && s.identityKey !== 'unknown'
-                    ? `${s.identityKey.slice(0, 6)}...${s.identityKey.slice(-4)}`
-                    : '\u2014'}
+                  {s.showIdentityKey === false
+                    ? 'Private'
+                    : s.identityKey && s.identityKey !== 'unknown'
+                      ? `${s.identityKey.slice(0, 6)}...${s.identityKey.slice(-4)}`
+                      : '\u2014'}
                 </td>
                 <td className="px-3 py-3 font-mono text-xs">
                   <a

@@ -60,6 +60,7 @@ MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/typestamp?retryWrites=tr
 NEXT_PUBLIC_WOC_BASE=https://api.whatsonchain.com/v1/bsv/main
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 OVERLAY_URL=http://localhost:8080
+OVERLAY_KNOWN_NODES=              # comma-separated fallback overlay URLs (optional, used if SHIP discovery returns empty)
 ```
 
 Create an `overlay/.env` file:
@@ -69,7 +70,8 @@ MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/typestamp?retryWrites=tr
 OVERLAY_PRIVATE_KEY=<64-char hex private key>
 OVERLAY_HOSTING_URL=http://localhost:8080
 OVERLAY_PORT=8080
-OVERLAY_PEER_URLS=                # comma-separated peer node URLs for cross-submission (optional)
+OVERLAY_PEER_URLS=                # comma-separated peer node URLs for GASP sync + cross-submission (optional)
+KNEX_URL=                         # external DB for engine state, e.g. mysql://user:pass@host:port/db (optional, defaults to SQLite)
 ```
 
 ### Run
@@ -166,13 +168,36 @@ When a stamp is created, the raw transaction (BEEF) is submitted to all discover
 
 Overlay nodes advertise themselves via the **SHIP** protocol. The app queries the bootstrap node's `ls_ship` service for advertisements with `tm_typestamp` topic, decodes the PushDrop outputs to extract domain URLs, and health-checks each one. Results are cached for 30 seconds.
 
+A fallback `OVERLAY_KNOWN_NODES` environment variable (comma-separated URLs) ensures nodes are discoverable even before SHIP advertisements propagate.
+
 ### DirectAdvertiser
 
-Overlay nodes create SHIP and SLAP advertisements using a custom `DirectAdvertiser` that spends P2PKH UTXOs directly via WhatsOnChain, bypassing the default Dojo wallet backend. Advertisements are cross-submitted to peer nodes (configured via `OVERLAY_PEER_URLS`) for mutual discovery.
+The default `OverlayExpress` advertiser (`LegacyNinjaAdvertiser`) connects to a Dojo wallet backend that can't see P2PKH UTXOs. Typestamp uses a custom `DirectAdvertiser` that bypasses Dojo entirely:
+
+1. Derives the identity key from the overlay's private key
+2. Fetches confirmed P2PKH UTXOs from WhatsOnChain for the identity address
+3. Builds PushDrop advertisement outputs (SHIP for topic managers, SLAP for lookup services) using BRC-42 key derivation
+4. Signs and broadcasts the transaction via WhatsOnChain
+5. Cross-submits the tagged BEEF to peer overlay nodes (configured via `OVERLAY_PEER_URLS`) with the required `X-Topics` header
+
+Advertisements are created on each startup once UTXOs are confirmed. The default SDK broadcaster (`TopicBroadcaster`) is replaced with a no-op to prevent OOM from broadcasting to every SHIP-discovered peer on the global network.
 
 ### GASP Sync
 
-GASP synchronization is disabled to prevent blocking the HTTP listener on startup. Cross-node discovery relies on SHIP advertisements and peer cross-submission instead.
+Overlay nodes synchronize their `tm_typestamp` data with each other using the **GASP** (Graph-Aware Sync Protocol). The sync approach works around several `OverlayExpress` limitations:
+
+1. **GASP is disabled in config** (`configureEnableGASPSync(false)`) to prevent `start()` from blocking the HTTP listener while syncing
+2. **GASP routes are registered manually** (`/requestSyncResponse` and `/requestForeignGASPNode`) with explicit `express.json()` middleware, because `start()` adds `bodyParser` after route registration
+3. **The default advertiser and broadcaster are removed** before `start()` to prevent the `LegacyNinjaAdvertiser` and `TopicBroadcaster` from pulling massive data from the global overlay network
+4. **Background sync**: after the HTTP listener is up, a `setImmediate` callback creates advertisements via `DirectAdvertiser`, submits them to the local engine, then runs `engine.startGASPSync()` scoped to `tm_typestamp` only
+
+On each restart, nodes pull new UTXOs from their configured peers. The sync is unidirectional per restart — Node A pulls from Node B, and Node B pulls from Node A when it restarts. The engine stores full BEEF data for each output so that GASP can serve raw transactions and merkle proofs to requesting peers.
+
+**Sync configuration** in `overlay/.env`:
+
+```
+OVERLAY_PEER_URLS=https://other-node.example.com   # comma-separated peer URLs
+```
 
 ## API Routes
 
@@ -217,4 +242,6 @@ cd overlay
 railway up
 ```
 
-Or use the Dockerfile directly. Each overlay node needs its own `OVERLAY_PRIVATE_KEY`, `OVERLAY_HOSTING_URL`, and `MONGODB_URI`. Set `OVERLAY_PEER_URLS` to point to other nodes for cross-discovery.
+Or use the Dockerfile directly. Each overlay node needs its own `OVERLAY_PRIVATE_KEY`, `OVERLAY_HOSTING_URL`, and `MONGODB_URI`. Set `OVERLAY_PEER_URLS` to point to other nodes for cross-discovery and GASP sync.
+
+**Important:** For GASP sync to work across deploys, use an external database for the overlay engine's internal storage by setting `KNEX_URL` (e.g. `mysql://...`). Without it, the engine defaults to SQLite which is ephemeral on container platforms like Railway, meaning BEEF data is lost on each deploy and GASP can't serve historical outputs to peers.
