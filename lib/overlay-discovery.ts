@@ -69,8 +69,12 @@ export async function discoverOverlayNodes(): Promise<DiscoveryResult> {
     // SHIP lookup failed — fall back to bootstrap URL only
   }
 
-  // Always include bootstrap URL
+  // Always include bootstrap URL and any known nodes (fallback if SHIP ads are missing)
   discoveredUrls.add(bootstrapUrl)
+  const knownNodes = (process.env.OVERLAY_KNOWN_NODES || '').split(',').map(s => s.trim()).filter(Boolean)
+  for (const url of knownNodes) {
+    discoveredUrls.add(url.replace(/\/+$/, ''))
+  }
 
   // Health-check all URLs in parallel
   const allUrls = Array.from(discoveredUrls)
@@ -79,7 +83,7 @@ export async function discoverOverlayNodes(): Promise<DiscoveryResult> {
       fetch(`${url}/lookup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ service: 'ls_typestamp', query: {} }),
+        body: JSON.stringify({ service: 'ls_typestamp', query: { type: 'findAll', limit: 1 } }),
         signal: AbortSignal.timeout(3000),
       }).then(() => url)
     )

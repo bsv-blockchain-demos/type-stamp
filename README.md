@@ -17,24 +17,24 @@ Stake a timestamped, identity-bound claim on your ideas, works, IP, quotes, phra
 
 - **Public stamps** — text visible on the overlay network table and certificate page
 - **Sealed stamps** — content hidden, only the hash is stored on-chain and in the database. Prove knowledge via the verify page.
-- **Home page teaser** — 3 most recent stamps with relative time, linking to the full overlay table
-- **Overlay Network table** — 6 columns: Typestamp, Author, Identity Key, TXID (links to WhatsOnChain), Block height, Created At
+- **Overlay Network page** — live feed of all stamps indexed by independent overlay nodes, with auto-refresh every 30 seconds
+- **Overlay node discovery** — nodes advertise via SHIP protocol and are discovered automatically; the app health-checks and displays all active nodes
+- **Certificate page** — shareable, server-rendered page with OG tags for any stamp
+- **Verify page** — paste any text to check if it matches a stamp on-chain, with public/sealed explainer cards and match/no-match result states
+- **Duplicate detection** — identical text cannot be stamped twice (checked against both overlay and app DB)
+- **Identity-bound** — each stamp is locked to the creator's identity key via BRC-42 key derivation
 - **Block height caching** — block heights fetched from WhatsOnChain and cached in MongoDB
-- **Verify page** — redesigned with public/sealed explainer cards, match/no-match result states, and a "How verification works" accordion
 - **Delete stamps** — owner can delete a stamp, freeing the text for others to claim
-- **Duplicate detection** — identical text cannot be stamped twice
-- **Identity-bound** — each stamp is locked to the creator's identity key
-- **UTC timestamps** — all times displayed in UTC to match blockchain time
-- **Overlay Network** — stamps are submitted to a BSV Overlay for decentralized indexing and lookup
 - **Dark/light theme** — toggle between themes
+- **Home page teaser** — 3 most recent stamps with relative time, linking to the full overlay table
 
 ## Tech Stack
 
-- **Next.js 14** — App Router, TypeScript, Tailwind CSS
-- **@bsv/sdk** — WalletClient, PushDrop, SecurityLevels
+- **Next.js 15** — App Router, React 19, TypeScript, Tailwind CSS
+- **@bsv/sdk** — WalletClient, PushDrop, BRC-42 key derivation
 - **@bsv/overlay-express** — Overlay server with custom topic manager and lookup service
 - **MongoDB Atlas** — stamp metadata, overlay indexing, duplicate detection
-- **WhatsOnChain API** — on-chain transaction verification, block height lookups
+- **WhatsOnChain API** — on-chain transaction verification, block height lookups, UTXO fetching
 
 ## Getting Started
 
@@ -42,37 +42,34 @@ Stake a timestamped, identity-bound claim on your ideas, works, IP, quotes, phra
 
 - Node.js 18+
 - A MongoDB Atlas cluster (or local MongoDB)
-- A BSV wallet (e.g. BSV Desktop) for creating stamps
+- A BSV wallet extension (e.g. Yours Wallet) for creating stamps
 
-### Setup
+### Install
 
 ```bash
-# Install dependencies
 npm install
 cd overlay && npm install && cd ..
-
-# Configure environment
-cp .env.local.example .env.local
-# Edit .env.local with your MongoDB URI
 ```
 
 ### Environment Variables
 
-Create a `.env.local` file:
+Create a `.env.local` file in the project root:
 
 ```
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/typestamp?retryWrites=true&w=majority
 NEXT_PUBLIC_WOC_BASE=https://api.whatsonchain.com/v1/bsv/main
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+OVERLAY_URL=http://localhost:8080
 ```
 
 Create an `overlay/.env` file:
 
 ```
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/typestamp?retryWrites=true&w=majority
-OVERLAY_PRIVATE_KEY=<hex private key>
+OVERLAY_PRIVATE_KEY=<64-char hex private key>
 OVERLAY_HOSTING_URL=http://localhost:8080
 OVERLAY_PORT=8080
+OVERLAY_PEER_URLS=                # comma-separated peer node URLs for cross-submission (optional)
 ```
 
 ### Run
@@ -82,7 +79,7 @@ OVERLAY_PORT=8080
 npm run dev:all
 ```
 
-This starts both the Next.js app on port 3000 and the overlay server on port 8080.
+This starts the Next.js app on port 3000 and the overlay server on port 8080 via `concurrently`.
 
 Open [http://localhost:3000](http://localhost:3000).
 
@@ -92,32 +89,34 @@ Open [http://localhost:3000](http://localhost:3000).
 app/
   page.tsx                    # Home — stamp form + recent stamps teaser
   c/[txid]/page.tsx           # Certificate page (SSR + OG tags)
-  overlaynetwork/page.tsx     # Overlay Network — live feed from overlay lookup
+  overlaynetwork/page.tsx     # Overlay Network — live feed from overlay nodes
   verify/page.tsx             # Verify a stamp (no wallet needed)
   mytypestamps/page.tsx       # User's stamps + visibility toggle
-  api/typestamps/             # POST (create, submits BEEF to overlay) + GET (list)
+  api/typestamps/             # POST (create + submit BEEF to overlay) + GET (list)
   api/typestamps/[txid]/      # GET (single) + PATCH (visibility) + DELETE
-  api/overlay/check/          # GET (duplicate check via overlay lookup)
-  api/overlay/stamps/         # GET (paginated stamps from overlay, author + block height)
+  api/typestamps/check/       # GET (duplicate check)
+  api/overlay/check/          # GET (duplicate check via overlay)
+  api/overlay/stamps/         # GET (paginated stamps from overlay, author join, block heights)
 
 components/
   WalletProvider.tsx           # React context for wallet state
   Header.tsx                   # Nav bar + wallet connect + theme toggle
   StampForm.tsx                # Content input + public/sealed mode + stamp flow
   RecentStampsTeaser.tsx       # Home page — 3 most recent stamps with relative time
-  NetworkFeed.tsx              # Overlay Network feed with pagination
+  NetworkFeed.tsx              # Overlay Network feed with auto-refresh + pagination
   CertificateCard.tsx          # Certificate display + share + delete
   ShareButtons.tsx             # X + LinkedIn share
-  VerifyForm.tsx               # Verify content against on-chain hash (match/no-match states)
-  MyTypeStampsList.tsx         # User's stamps with search, hash copy, visibility
+  VerifyForm.tsx               # Verify content against on-chain hash
+  MyTypeStampsList.tsx         # User's stamps with search, hash copy, visibility toggle
   ThemeToggle.tsx              # Dark/light mode toggle
   Footer.tsx                   # Site footer
 
   overlay/
     OverlayStampTable.tsx      # 6-column table (Typestamp, Author, Identity Key, TXID, Block, Created At)
     OverlayStats.tsx           # Active nodes, stamps indexed, current block cards
-    OverlayHero.tsx            # Overlay page header with live indicator
-    OverlayEducation.tsx       # Flow diagram explaining overlay architecture
+    OverlayHero.tsx            # Overlay page header with live connection indicator
+    OverlayEducation.tsx       # Animated flow diagram: BSV Blockchain → Overlay Node → App
+    OverlayNodePanel.tsx       # Connected overlay nodes with health status
     OverlayTrustBanner.tsx     # Trust/immutability banner
     OverlayPagination.tsx      # Pagination controls
     types.ts                   # OverlayStamp interface
@@ -129,15 +128,15 @@ lib/
   attest.ts                    # PushDrop token creation
   verify.ts                    # WhatsOnChain fetch + PushDrop decode
   share.ts                     # Social share URL builders
-
-models/
-  typestamp.ts                 # Typestamp interface + MongoDB collection helper
+  overlay-discovery.ts         # SHIP-based overlay node discovery + health checks
 
 overlay/
-  src/index.ts                 # Overlay server entry point (OverlayExpress)
-  src/TypeStampTopicManager.ts # Admits PushDrop outputs with typestamp protocol
-  src/TypeStampLookupService.ts# Indexes admitted outputs into MongoDB with decoded fields
-  src/TypeStampStorage.ts      # MongoDB storage for overlay-indexed stamps
+  src/index.ts                 # Overlay server entry (OverlayExpress + DirectAdvertiser)
+  src/DirectAdvertiser.ts      # Custom SHIP/SLAP advertiser (bypasses Dojo, spends P2PKH directly)
+  src/TypeStampTopicManager.ts # Validates PushDrop outputs with typestamp protocol
+  src/TypeStampLookupService.ts# Indexes admitted outputs into MongoDB
+  src/TypeStampStorage.ts      # MongoDB storage with upsert + indexes
+  Dockerfile                   # Container build for overlay server
 ```
 
 ## On-Chain Format
@@ -151,50 +150,71 @@ Each stamp is a PushDrop token with four fields:
 | Title | First 100 chars of content (or `Sealed Stamp`) |
 | Timestamp | Unix timestamp |
 
-The token is locked to the creator's identity key, signed, and stored in the `typestamp` basket.
+The token is locked to a derived key (BRC-42, protocol `[0, 'typestamp']`), signed, and stored in the `typestamp` basket.
 
-## Database Schema
+## Overlay Architecture
 
-| Field | On-Chain | MongoDB | Notes |
-|-------|----------|---------|-------|
-| `txid` | — | Yes | Unique transaction ID |
-| `hash` | Yes | Yes | SHA-256 of content |
-| `title` | Yes | Yes | First 100 chars or "Sealed Stamp" |
-| `content` | No | Yes* | *Empty string for sealed stamps |
-| `identityKey` | Yes (locking key) | Yes | Creator's public key |
-| `timestamp` | Yes | Yes | Unix timestamp |
-| `isPublic` | No | Yes | Visibility in public feed |
-| `isSealed` | No | Yes | Whether content is hidden |
-| `displayName` | No | Yes | Author's chosen display name |
-| `showIdentityKey` | No | Yes | Whether to show identity key publicly |
-| `blockHeight` | No | Yes (cached) | Block height from WhatsOnChain, cached on first lookup |
+The overlay network provides decentralized indexing — anyone can run a node and see the same data independently.
+
+When a stamp is created, the raw transaction (BEEF) is submitted to all discovered overlay nodes. Each overlay node:
+
+1. **Topic Manager** (`tm_typestamp`) validates the PushDrop output matches the typestamp protocol
+2. **Lookup Service** (`ls_typestamp`) indexes admitted outputs into MongoDB with decoded fields (hash, title, timestamp, identity key)
+3. **Lookup queries** support `findAll`, `findByHash`, and `findByIdentityKey`
+
+### Node Discovery
+
+Overlay nodes advertise themselves via the **SHIP** protocol. The app queries the bootstrap node's `ls_ship` service for advertisements with `tm_typestamp` topic, decodes the PushDrop outputs to extract domain URLs, and health-checks each one. Results are cached for 30 seconds.
+
+### DirectAdvertiser
+
+Overlay nodes create SHIP and SLAP advertisements using a custom `DirectAdvertiser` that spends P2PKH UTXOs directly via WhatsOnChain, bypassing the default Dojo wallet backend. Advertisements are cross-submitted to peer nodes (configured via `OVERLAY_PEER_URLS`) for mutual discovery.
+
+### GASP Sync
+
+GASP synchronization is disabled to prevent blocking the HTTP listener on startup. Cross-node discovery relies on SHIP advertisements and peer cross-submission instead.
 
 ## API Routes
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| `POST` | `/api/typestamps` | Create a stamp + submit BEEF to overlay |
-| `GET` | `/api/typestamps` | List stamps (by identity key or public) |
+| `POST` | `/api/typestamps` | Create a stamp + submit BEEF to overlay nodes |
+| `GET` | `/api/typestamps` | List stamps (by identity key or public, paginated) |
 | `GET` | `/api/typestamps/[txid]` | Get a single stamp |
-| `PATCH` | `/api/typestamps/[txid]` | Toggle visibility |
+| `PATCH` | `/api/typestamps/[txid]` | Toggle visibility or hide stamp (owner only) |
 | `DELETE` | `/api/typestamps/[txid]` | Delete a stamp (owner only) |
-| `GET` | `/api/overlay/check` | Check for duplicate hash via overlay |
-| `GET` | `/api/overlay/stamps` | Paginated stamps from overlay (joins author by identityKey, fetches + caches block heights from WoC) |
+| `GET` | `/api/typestamps/check` | Check for duplicate hash |
+| `GET` | `/api/overlay/check` | Check overlay + app collection for duplicate |
+| `GET` | `/api/overlay/stamps` | Paginated stamps from overlay (joins author, caches block heights, discovers nodes) |
 
-## Overlay Architecture
+## Database
 
-When a stamp is created, the raw transaction (BEEF) is submitted to the overlay server running on port 8080. The overlay:
+### MongoDB Collections
 
-1. **Topic Manager** (`tm_typestamp`) validates the PushDrop output matches the typestamp protocol
-2. **Lookup Service** (`ls_typestamp`) indexes admitted outputs into MongoDB with decoded fields
-3. **Lookup queries** support `findAll`, `findByHash`, and `findByIdentityKey`
+| Collection | Purpose |
+|------------|---------|
+| `typestamps` | App-level stamp records (content, visibility, display name) |
+| `overlay_typestamps` | Overlay-indexed stamps (decoded from on-chain PushDrop tokens) |
 
-The `/overlaynetwork` page displays stamps indexed by the overlay, independent of the app's own MongoDB records. The overlay table shows 6 columns with TXID linking directly to WhatsOnChain and block heights cached from WoC API responses.
+The overlay server also uses SQLite (or MySQL/PostgreSQL via `KNEX_URL`) for internal overlay engine state (SHIP/SLAP records, UTXO tracking).
 
 ## Deploy
+
+### Next.js App (Vercel)
 
 ```bash
 npm run build
 ```
 
-Deploy to Vercel and set the same environment variables in your project settings. The overlay server needs to be hosted separately (e.g. on a VPS or cloud instance).
+Deploy to Vercel and set environment variables (`MONGODB_URI`, `NEXT_PUBLIC_WOC_BASE`, `NEXT_PUBLIC_APP_URL`, `OVERLAY_URL`).
+
+### Overlay Server (Railway / VPS)
+
+Deploy from the `overlay/` directory:
+
+```bash
+cd overlay
+railway up
+```
+
+Or use the Dockerfile directly. Each overlay node needs its own `OVERLAY_PRIVATE_KEY`, `OVERLAY_HOSTING_URL`, and `MONGODB_URI`. Set `OVERLAY_PEER_URLS` to point to other nodes for cross-discovery.

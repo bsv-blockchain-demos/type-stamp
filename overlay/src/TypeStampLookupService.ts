@@ -91,7 +91,8 @@ export class TypeStampLookupService implements LookupService {
       }))
     }
 
-    throw new Error(`Unknown lookup query type: ${query.type}`)
+    // Return empty for unknown or missing query types (e.g. health checks)
+    return []
   }
 
   async getDocumentation(): Promise<string> {
