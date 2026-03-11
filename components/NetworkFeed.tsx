@@ -62,7 +62,7 @@ export default function NetworkFeed() {
 
   return (
     <div>
-      <OverlayHero blockHeight={blockHeight} isConnected={isConnected} />
+      <OverlayHero blockHeight={blockHeight} isConnected={activeNodes > 0} />
       <OverlayStats totalStamps={total} blockHeight={blockHeight} activeNodes={activeNodes} />
       <OverlayTrustBanner />
       <OverlayEducation />

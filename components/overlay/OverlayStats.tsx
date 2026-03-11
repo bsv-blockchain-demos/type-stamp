@@ -46,7 +46,11 @@ export default function OverlayStats({ totalStamps, blockHeight, activeNodes }: 
           key={card.label}
           className="rounded-xl border border-th-border bg-th-surface p-5 flex items-center gap-4"
         >
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center animate-pulse">
+          <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center animate-pulse ${
+            card.label.includes('Node') && activeNodes === 0
+              ? 'bg-red-500/10 text-red-500'
+              : 'bg-green-500/10 text-green-500'
+          }`}>
             {card.icon}
           </div>
           <div>
