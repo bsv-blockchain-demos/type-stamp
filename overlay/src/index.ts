@@ -81,10 +81,12 @@ async function main() {
     app.post('/requestSyncResponse', async (req: any, res: any) => {
       try {
         const topic = req.headers['x-bsv-topic'] as string
+        console.log(`[GASP] /requestSyncResponse called for topic: ${topic}`)
         const response = await engine.provideForeignSyncResponse(req.body, topic)
         res.status(200).json(response)
       } catch (error: any) {
-        console.error('Error in /requestSyncResponse:', error)
+        const topic = req.headers['x-bsv-topic'] as string
+        console.error(`[GASP] /requestSyncResponse error (topic=${topic}):`, error?.message)
         res.status(400).json({ status: 'error', message: error?.message || 'Unknown error' })
       }
     })
