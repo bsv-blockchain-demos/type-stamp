@@ -76,6 +76,10 @@ async function main() {
   engine.advertiser = advertiser
   advertiser.setEngine(engine)
 
+  // Disable the SDK's built-in broadcaster to prevent global network sync (causes OOM)
+  // Our DirectAdvertiser handles cross-submission to known peers instead
+  engine.broadcaster = undefined
+
   // Manually register GASP sync routes (normally done by start() when enableGASPSync=true)
   const app = (server as any).app
   if (app) {
