@@ -80,10 +80,11 @@ export default async function CertificatePage(props: Props) {
   const displayName = typestamp?.displayName || (qp.displayName as string) || undefined
   const showIdentityKey = typestamp?.showIdentityKey ?? true
   const isSealed = typestamp?.isSealed === true || qp.isSealed === '1'
+  const hidden = typestamp?.hidden === true
   const timestamp = typestamp?.timestamp || (decoded?.timestamp ? parseInt(decoded.timestamp) : 0) || (qp.timestamp ? parseInt(qp.timestamp as string) : 0)
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <CertificateCard
         txid={txid}
         title={title}
@@ -92,6 +93,7 @@ export default async function CertificatePage(props: Props) {
         displayName={displayName}
         showIdentityKey={showIdentityKey}
         isSealed={isSealed}
+        hidden={hidden}
         timestamp={timestamp}
         blockheight={details?.blockheight}
         blocktime={details?.blocktime}

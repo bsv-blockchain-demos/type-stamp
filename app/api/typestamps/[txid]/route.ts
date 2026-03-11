@@ -72,10 +72,14 @@ export async function PATCH(
   try {
     const { txid } = await props.params
     const body = await req.json()
-    const { identityKey, isPublic } = body
+    const { identityKey, isPublic, hidden } = body
 
-    if (!identityKey || typeof isPublic !== 'boolean') {
-      return NextResponse.json({ error: 'Missing identityKey or isPublic' }, { status: 400 })
+    if (!identityKey) {
+      return NextResponse.json({ error: 'Missing identityKey' }, { status: 400 })
+    }
+
+    if (typeof isPublic !== 'boolean' && typeof hidden !== 'boolean') {
+      return NextResponse.json({ error: 'Missing isPublic or hidden' }, { status: 400 })
     }
 
     const collection = await getTypeStampsCollection()
@@ -89,12 +93,13 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    await collection.updateOne(
-      { txid },
-      { $set: { isPublic } }
-    )
+    const $set: Record<string, boolean> = {}
+    if (typeof isPublic === 'boolean') $set.isPublic = isPublic
+    if (typeof hidden === 'boolean') $set.hidden = hidden
 
-    return NextResponse.json({ success: true, txid, isPublic })
+    await collection.updateOne({ txid }, { $set })
+
+    return NextResponse.json({ success: true, txid, ...$set })
   } catch (error) {
     console.error('PATCH /api/typestamps/[txid] error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

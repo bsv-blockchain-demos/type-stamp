@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTypeStampsCollection, TypeStamp } from '@/models/typestamp'
+import { discoverOverlayNodes } from '@/lib/overlay-discovery'
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,16 +38,20 @@ export async function POST(req: NextRequest) {
 
     await collection.insertOne(typestamp)
 
-    // Fire-and-forget overlay submit
+    // Fire-and-forget overlay submit to all discovered nodes
     if (rawTx) {
-      const OVERLAY_URL = process.env.OVERLAY_URL || 'http://localhost:8080'
-      fetch(`${OVERLAY_URL}/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/octet-stream',
-          'x-topics': JSON.stringify(['tm_typestamp']),
-        },
-        body: Buffer.from(rawTx, 'hex'),
+      discoverOverlayNodes().then(({ nodeUrls }) => {
+        const body = Buffer.from(rawTx, 'hex')
+        for (const url of nodeUrls) {
+          fetch(`${url}/submit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/octet-stream',
+              'x-topics': JSON.stringify(['tm_typestamp']),
+            },
+            body,
+          }).catch(() => {})
+        }
       }).catch(() => {})
     }
 
@@ -67,7 +72,9 @@ export async function GET(req: NextRequest) {
 
     const collection = await getTypeStampsCollection()
 
-    const filter = identityKey ? { identityKey } : { isPublic: true }
+    const filter = identityKey
+      ? { identityKey, hidden: { $ne: true } }
+      : { isPublic: true, hidden: { $ne: true } }
 
     const typestamps = await collection
       .find(filter, { projection: { content: 0 } })

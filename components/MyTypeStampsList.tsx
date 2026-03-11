@@ -120,63 +120,74 @@ export default function MyTypeStampsList() {
 
   if (typestamps.length === 0) {
     return (
-      <div className="text-center text-th-text-muted py-8">
-        <p>You haven&apos;t made any stamps yet.</p>
-        <Link href="/" className="text-orange-500 hover:text-orange-400 text-sm mt-2 inline-block transition-colors">
-          Create your first stamp &rarr;
+      <div
+        className="text-center py-16"
+        style={{ animation: 'fade-in-up 600ms ease-out both' }}
+      >
+        <p className="text-th-text-secondary text-lg">You haven&apos;t stamped anything yet.</p>
+        <Link
+          href="/"
+          className="inline-block mt-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white px-6 py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 font-medium text-sm"
+        >
+          Stamp something &rarr;
         </Link>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {/* Header with count */}
-      <div className="flex items-baseline justify-between gap-4">
-        <div className="flex items-baseline gap-2">
-          <h1 className="text-2xl font-bold text-th-text">My Stamps</h1>
-          <span className="text-sm text-th-text-muted">{typestamps.length} stamp{typestamps.length !== 1 ? 's' : ''}</span>
-        </div>
+      <div
+        className="flex items-baseline gap-3"
+        style={{ animation: 'fade-in-up 600ms ease-out both' }}
+      >
+        <h1 className="text-3xl sm:text-4xl font-bold text-th-text">My Stamps</h1>
+        <span className="text-sm text-th-text-muted">{typestamps.length} stamp{typestamps.length !== 1 ? 's' : ''}</span>
       </div>
 
-      {/* Search + Results */}
-      <div className="space-y-3">
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search stamps..."
-          className="w-full rounded-lg bg-th-surface-alt border border-th-border text-th-text px-4 py-2 text-sm placeholder:text-th-text-muted focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-shadow"
-        />
+      {/* Search */}
+      <input
+        type="text"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+        placeholder="Search stamps..."
+        className="w-full rounded-xl bg-th-surface-alt border border-th-border text-th-text px-4 py-2.5 text-sm placeholder:text-th-text-muted focus:outline-none focus:border-orange-500 transition-shadow"
+        style={{ transition: 'box-shadow 200ms, border-color 200ms' }}
+        onFocus={e => { e.currentTarget.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.2)' }}
+        onBlur={e => { e.currentTarget.style.boxShadow = 'none' }}
+      />
 
+      {/* Results */}
       {filtered.length === 0 ? (
         <p className="text-center text-th-text-muted text-sm py-6">No stamps match &ldquo;{search}&rdquo;</p>
       ) : (
         <div className="space-y-3">
-          {filtered.map(ts => (
+          {filtered.map((ts, i) => (
             <Link
               key={ts.txid}
               href={`/c/${ts.txid}`}
-              className={`group block rounded-lg border border-th-border bg-th-surface p-4 shadow-sm hover:shadow-md hover:border-orange-500/30 transition-all ${ts.isSealed ? 'border-l-4 border-l-gray-400 dark:border-l-gray-600' : ''}`}
+              className="group block rounded-lg border border-th-border bg-th-surface p-4 shadow-sm border-l-2 border-l-transparent hover:border-l-orange-500 hover:bg-orange-500/5 hover:shadow-md transition-all"
+              style={{ animation: `fade-in-up 400ms ease-out ${i * 50}ms both` }}
             >
               <div className="flex items-start justify-between gap-3">
                 {/* Stamp title as hero */}
                 {ts.isSealed ? (
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="inline-flex items-center gap-1 shrink-0 text-xs font-medium text-orange-500 bg-orange-500/10 px-2 py-0.5 rounded-full">
+                    <span className="inline-flex items-center gap-1 shrink-0 text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
                         <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
                       </svg>
                       Sealed
                     </span>
-                    <span className="text-sm font-mono text-th-text-muted truncate group-hover:text-orange-500 transition-colors">
+                    <span className="text-xs font-mono text-th-text-muted truncate">
                       {bareHash(ts.hash).slice(0, 8)}&hellip;{bareHash(ts.hash).slice(-8)}
                     </span>
                     <CopyHashButton text={ts.hash} />
                   </div>
                 ) : (
                   <p className="text-lg font-bold text-th-text leading-snug group-hover:text-orange-500 transition-colors">
-                    &ldquo;{ts.title}&rdquo;
+                    {ts.title}
                   </p>
                 )}
 
@@ -197,7 +208,11 @@ export default function MyTypeStampsList() {
                 ) : null}
                 <span className="mx-1.5">&middot;</span>
                 {ts.isPublic ? (
-                  <span className="text-orange-500 font-medium">{ts.isSealed ? 'Listed' : 'Public'}</span>
+                  ts.isSealed ? (
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">Listed</span>
+                  ) : (
+                    <span className="text-orange-500 font-medium">Public</span>
+                  )
                 ) : (
                   <span className="text-th-text-muted bg-th-surface-alt px-1.5 py-0.5 rounded">Private</span>
                 )}
@@ -206,7 +221,6 @@ export default function MyTypeStampsList() {
           ))}
         </div>
       )}
-      </div>
     </div>
   )
 }

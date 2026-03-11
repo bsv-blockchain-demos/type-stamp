@@ -28,3 +28,38 @@ body {
   color: rgb(var(--color-text));
   background: rgb(var(--color-bg));
 }
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-scale {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes gradient-border {
+  0%, 100% { border-color: rgb(194 65 12); }
+  50% { border-color: rgb(75 85 99); }
+}
+@keyframes glow-pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.3); }
+  50% { box-shadow: 0 0 8px 2px rgba(34,197,94,0.15); }
+}
+@keyframes glow-pulse-orange {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.3); }
+  50% { box-shadow: 0 0 8px 2px rgba(249,115,22,0.15); }
+}
+@keyframes travel-dot {
+  0% { left: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+@keyframes flash-new {
+  from { background-color: rgba(249,115,22,0.1); }
+  to { background-color: transparent; }
+}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/mongodb'
+import { discoverOverlayNodes } from '@/lib/overlay-discovery'
 
 const WOC_BASE = process.env.NEXT_PUBLIC_WOC_BASE || 'https://api.whatsonchain.com/v1/bsv/main'
 
@@ -13,9 +14,20 @@ export async function GET(req: NextRequest) {
     const db = await getDb()
     const collection = db.collection('overlay_typestamps')
 
+    // Get hidden txids from the app collection to exclude from results
+    const appCollection = db.collection('typestamps')
+    const hiddenDocs = await appCollection
+      .find({ hidden: true }, { projection: { txid: 1 } })
+      .toArray()
+    const hiddenTxids = new Set(hiddenDocs.map(d => d.txid))
+
+    const overlayFilter = hiddenTxids.size > 0
+      ? { txid: { $nin: Array.from(hiddenTxids) } }
+      : {}
+
     const [stamps, total] = await Promise.all([
-      collection.find().sort({ timestamp: -1 }).skip(skip).limit(limit).toArray(),
-      collection.countDocuments(),
+      collection.find(overlayFilter).sort({ timestamp: -1 }).skip(skip).limit(limit).toArray(),
+      collection.countDocuments(overlayFilter),
     ])
 
     // Join with typestamps collection to get displayName by identityKey
@@ -70,13 +82,8 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Check if overlay node is reachable
-    let activeNodes = 0
-    const overlayUrl = process.env.OVERLAY_URL || 'http://localhost:8080'
-    try {
-      const health = await fetch(`${overlayUrl}/.well-known/host-info`, { signal: AbortSignal.timeout(3000) })
-      if (health.ok) activeNodes = 1
-    } catch { /* node unreachable */ }
+    // Discover overlay nodes via SHIP
+    const { activeNodes } = await discoverOverlayNodes()
 
     return NextResponse.json({
       stamps,

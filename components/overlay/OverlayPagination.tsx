@@ -19,11 +19,20 @@ export default function OverlayPagination({
 
   return (
     <div className="mt-4 flex items-center justify-between text-sm">
-      <span className="text-th-text-muted">
-        {total > 0
-          ? `Showing ${startItem}\u2013${endItem} of ${total} stamp${total !== 1 ? 's' : ''}`
-          : 'No stamps'}
-      </span>
+      <div>
+        <span className="text-th-text-muted">
+          {total > 0
+            ? `Showing ${startItem}\u2013${endItem} of ${total} stamp${total !== 1 ? 's' : ''}`
+            : 'No stamps'}
+        </span>
+        <span className="flex items-center gap-1.5 text-xs text-orange-500 mt-1">
+          <span
+            className="w-1.5 h-1.5 rounded-full bg-orange-500"
+            style={{ animation: 'pulse-dot 2s ease-in-out infinite' }}
+          />
+          Live · updates every 30s
+        </span>
+      </div>
 
       <div className="flex items-center gap-1">
         <button

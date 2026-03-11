@@ -1,6 +1,15 @@
-export default function OverlayTrustBanner() {
+interface OverlayTrustBannerProps {
+  blockHeight?: number | null
+}
+
+export default function OverlayTrustBanner({ blockHeight }: OverlayTrustBannerProps) {
   return (
-    <div className="mb-8 rounded-xl bg-zinc-900 dark:bg-zinc-800 px-5 py-4 flex items-start gap-3">
+    <div
+      className="mb-8 rounded-xl bg-zinc-900 dark:bg-zinc-800 px-5 py-4 flex items-start gap-3 border-2"
+      style={{
+        animation: 'fade-in-up 500ms ease-out both, gradient-border 4s ease-in-out infinite',
+      }}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -13,11 +22,18 @@ export default function OverlayTrustBanner() {
           clipRule="evenodd"
         />
       </svg>
-      <p className="text-sm text-zinc-300">
-        <strong className="text-white">Typestamp cannot modify or delete these records.</strong>{' '}
-        This data is indexed directly from the BSV blockchain by an open overlay network.
-        Anyone can run a node and see the same data independently.
-      </p>
+      <div>
+        <p className="text-sm text-zinc-300">
+          <strong className="text-white">Typestamp cannot modify or delete these records.</strong>{' '}
+          This data is indexed directly from the BSV blockchain by an open overlay network.
+          Anyone can run a node and see the same data independently.
+        </p>
+        {blockHeight != null && (
+          <p className="text-xs text-zinc-400 mt-1.5">
+            Currently verified against BSV block #{blockHeight.toLocaleString()}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

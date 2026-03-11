@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import confetti from 'canvas-confetti'
 import ShareButtons from './ShareButtons'
@@ -15,6 +15,7 @@ interface CertificateCardProps {
   displayName?: string
   showIdentityKey?: boolean
   isSealed?: boolean
+  hidden?: boolean
   timestamp: number
   blockheight?: number
   blocktime?: number
@@ -50,7 +51,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 function truncateHex(hex: string) {
-  return `${hex.slice(0, 8)}…${hex.slice(-8)}`
+  return `${hex.slice(0, 8)}\u2026${hex.slice(-8)}`
 }
 
 export default function CertificateCard({
@@ -61,41 +62,38 @@ export default function CertificateCard({
   displayName,
   showIdentityKey = true,
   isSealed = false,
+  hidden: initialHidden = false,
   timestamp,
   blockheight,
   confirmations,
 }: CertificateCardProps) {
   const [liveConfirmations, setLiveConfirmations] = useState(confirmations)
   const [liveBlockheight, setLiveBlockheight] = useState(blockheight)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [isHidden, setIsHidden] = useState(initialHidden)
+  const [showHideConfirm, setShowHideConfirm] = useState(false)
+  const [isToggling, setIsToggling] = useState(false)
 
   const { identityKey: walletIdentityKey } = useWallet()
-  const router = useRouter()
   const isOwner = walletIdentityKey === identityKey
 
   const isPending = !liveConfirmations || liveConfirmations <= 0
   const searchParams = useSearchParams()
 
-  const handleDelete = async () => {
+  const toggleHidden = async (newHidden: boolean) => {
     if (!walletIdentityKey) return
-    setIsDeleting(true)
+    setIsToggling(true)
     try {
-      const res = await fetch(`/api/typestamps/${txid}?identityKey=${walletIdentityKey}`, {
-        method: 'DELETE',
+      const res = await fetch(`/api/typestamps/${txid}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identityKey: walletIdentityKey, hidden: newHidden }),
       })
       if (res.ok) {
-        router.push('/mytypestamps')
-      } else {
-        const data = await res.json()
-        alert(data.error || 'Failed to delete stamp.')
+        setIsHidden(newHidden)
+        setShowHideConfirm(false)
       }
-    } catch {
-      alert('Failed to delete stamp.')
-    } finally {
-      setIsDeleting(false)
-      setShowDeleteConfirm(false)
-    }
+    } catch { /* ignore */ }
+    finally { setIsToggling(false) }
   }
 
   useEffect(() => {
@@ -140,14 +138,38 @@ export default function CertificateCard({
     })
 
   return (
-    <div className="rounded-xl border border-th-border bg-th-surface overflow-hidden shadow-sm">
-      <div className="p-6 sm:p-8 space-y-6">
+    <div
+      className="rounded-xl border-2 bg-th-surface overflow-hidden shadow-sm"
+      style={{
+        animation: 'fade-in-up 600ms ease-out both, gradient-border 4s ease-in-out infinite',
+      }}
+    >
+      {/* Hidden banner */}
+      {isOwner && isHidden && (
+        <div className="flex items-center justify-between gap-3 bg-th-surface-alt px-5 py-3 border-b border-th-border">
+          <span className="text-sm text-th-text-muted inline-flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12c1.292 4.338 5.31 7.5 10.066 7.5.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+            This stamp is hidden from your profile.
+          </span>
+          <button
+            onClick={() => toggleHidden(false)}
+            disabled={isToggling}
+            className="shrink-0 text-sm font-medium text-orange-500 hover:text-orange-400 transition-colors disabled:opacity-50"
+          >
+            {isToggling ? 'Unhiding...' : 'Unhide'}
+          </button>
+        </div>
+      )}
+
+      <div className="p-6 sm:p-10 space-y-8">
         {/* Celebratory header */}
-        <div className="text-center space-y-1">
+        <div className="text-center space-y-2">
           <p className="text-orange-500 text-lg font-semibold">Stamped forever.</p>
-          <p className="text-th-text-muted text-sm">
+          <p className="text-sm">
             {isPending ? (
-              <span className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 text-th-text-muted">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500" />
@@ -155,9 +177,15 @@ export default function CertificateCard({
                 Confirming on BSV Blockchain&hellip;
               </span>
             ) : (
-              <>
-                Verified on BSV Blockchain &middot; {liveConfirmations!.toLocaleString()} confirmation{liveConfirmations !== 1 ? 's' : ''}
-              </>
+              <span className="inline-flex items-center gap-2 text-th-text-muted">
+                Verified on BSV Blockchain
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  </svg>
+                  {liveConfirmations!.toLocaleString()} confirmation{liveConfirmations !== 1 ? 's' : ''}
+                </span>
+              </span>
             )}
           </p>
         </div>
@@ -180,8 +208,13 @@ export default function CertificateCard({
             </div>
           </div>
         ) : (
-          <blockquote className="text-2xl sm:text-3xl font-bold text-th-text leading-snug text-center">
+          <blockquote
+            className="text-4xl sm:text-5xl font-bold text-th-text leading-tight text-center"
+            style={{ animation: 'fade-in-up 500ms ease-out 200ms both' }}
+          >
+            <span className="text-th-text-muted font-serif">&ldquo;</span>
             {content || title}
+            <span className="text-th-text-muted font-serif">&rdquo;</span>
           </blockquote>
         )}
 
@@ -206,18 +239,18 @@ export default function CertificateCard({
         )}
 
         {/* Metadata row */}
-        <div className="grid grid-cols-3 gap-4 text-center text-sm border-t border-th-border pt-4">
+        <div className="grid grid-cols-3 gap-4 text-center text-sm border-t border-th-border pt-6">
           <div>
             <span className="text-th-text-muted text-xs block">Timestamp</span>
             <p className="text-th-text-secondary font-medium">{formatDate(timestamp)}</p>
           </div>
           <div>
             <span className="text-th-text-muted text-xs block">Block</span>
-            <p className="text-th-text-secondary font-medium">
+            <p className="font-medium">
               {liveBlockheight != null && liveBlockheight > 0 ? (
-                <>#{liveBlockheight.toLocaleString()}</>
+                <span className="text-blue-600">#{liveBlockheight.toLocaleString()}</span>
               ) : (
-                <span className="inline-flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1.5 text-orange-500">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
@@ -229,9 +262,11 @@ export default function CertificateCard({
           </div>
           <div>
             <span className="text-th-text-muted text-xs block">Confirmations</span>
-            <p className="text-th-text-secondary font-medium">
-              {liveConfirmations != null && liveConfirmations > 0 ? liveConfirmations.toLocaleString() : (
-                <span className="inline-flex items-center gap-1.5">
+            <p className="font-medium">
+              {liveConfirmations != null && liveConfirmations > 0 ? (
+                <span className="text-green-600">{liveConfirmations.toLocaleString()}</span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-orange-500">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-orange-500" />
@@ -246,53 +281,60 @@ export default function CertificateCard({
         {/* TXID */}
         <div className="text-center">
           <span className="text-th-text-muted text-xs">TXID</span>
-          <p className="font-mono text-xs text-th-text-secondary inline-flex items-center gap-1.5 justify-center w-full">
+          <p className="font-mono text-xs inline-flex items-center gap-1.5 justify-center w-full">
             <a
               href={`https://whatsonchain.com/tx/${txid}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-orange-500 hover:text-orange-400 transition-colors"
+              className="text-orange-500 hover:text-orange-400 transition-colors inline-flex items-center gap-1"
             >
               {truncateHex(txid)}
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
             </a>
             <CopyButton text={txid} />
           </p>
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-3 pt-2">
+        <div className="flex flex-col gap-4 pt-2">
           <ShareButtons txid={txid} title={title} />
 
           <Link
             href={`/verify?txid=${txid}`}
-            className="text-sm text-orange-500 hover:text-orange-400 transition-colors text-center"
+            className="group text-sm text-orange-500 hover:text-orange-400 transition-colors text-center inline-flex items-center justify-center gap-1"
           >
-            Verify Your Version &rarr;
+            Verify Your Version
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">&rarr;</span>
           </Link>
 
-          {isOwner && (
+          {isOwner && !isHidden && (
             <>
-              {!showDeleteConfirm ? (
+              {!showHideConfirm ? (
                 <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="text-sm text-th-text-muted hover:text-red-500 transition-colors"
+                  onClick={() => setShowHideConfirm(true)}
+                  className="text-xs text-th-text-muted hover:text-th-text-secondary transition-colors inline-flex items-center justify-center gap-1"
                 >
-                  Delete Stamp
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12c1.292 4.338 5.31 7.5 10.066 7.5.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                  </svg>
+                  Hide from profile
                 </button>
               ) : (
-                <div className="flex items-center justify-center gap-3 rounded-lg border border-red-500/30 bg-red-500/5 p-3">
-                  <p className="text-sm text-red-500">Delete this stamp? This frees the text for others to claim.</p>
+                <div className="flex items-center justify-center gap-3 text-sm text-th-text-muted">
+                  <span>Hide this stamp from your profile?</span>
                   <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="shrink-0 text-sm font-medium text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 px-3 py-1 rounded-lg transition-colors"
+                    onClick={() => toggleHidden(true)}
+                    disabled={isToggling}
+                    className="font-medium text-th-text-secondary hover:text-th-text transition-colors disabled:opacity-50"
                   >
-                    {isDeleting ? 'Deleting...' : 'Confirm'}
+                    {isToggling ? 'Hiding...' : 'Confirm'}
                   </button>
                   <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    disabled={isDeleting}
-                    className="shrink-0 text-sm text-th-text-muted hover:text-th-text transition-colors"
+                    onClick={() => setShowHideConfirm(false)}
+                    disabled={isToggling}
+                    className="text-th-text-muted hover:text-th-text-secondary transition-colors"
                   >
                     Cancel
                   </button>
@@ -300,6 +342,10 @@ export default function CertificateCard({
               )}
             </>
           )}
+
+          <p className="text-xs text-th-text-muted text-center">
+            Stamps are permanent by design — this is what makes them trustworthy.
+          </p>
         </div>
       </div>
     </div>
