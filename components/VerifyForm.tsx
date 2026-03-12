@@ -46,9 +46,13 @@ export default function VerifyForm() {
     setError(null)
     setResult(null)
 
-    const trimmedTxid = txid.trim()
+    const trimmedTxid = txid.trim().replace(/[^0-9a-fA-F]/g, '')
     if (!trimmedTxid) {
       setError('Please provide a TXID to verify.')
+      return
+    }
+    if (trimmedTxid.length !== 64) {
+      setError('Invalid TXID — must be a 64-character hex string.')
       return
     }
 
@@ -253,7 +257,7 @@ export default function VerifyForm() {
                 <span className="text-th-text-muted w-28 shrink-0">TXID</span>
                 <span className="font-mono text-xs">
                   <a
-                    href={`https://whatsonchain.com/tx/${txid.trim()}`}
+                    href={`https://whatsonchain.com/tx/${txid.trim().replace(/[^0-9a-fA-F]/g, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-orange-500 hover:text-orange-400 transition-colors inline-flex items-center gap-1"
@@ -269,7 +273,7 @@ export default function VerifyForm() {
 
             <div className="mt-6">
               <Link
-                href={`/c/${txid.trim()}`}
+                href={`/c/${txid.trim().replace(/[^0-9a-fA-F]/g, '')}`}
                 className="group inline-flex items-center gap-1 text-sm font-medium text-orange-500 hover:text-orange-400 transition-colors"
               >
                 View Certificate
