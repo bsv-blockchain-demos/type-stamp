@@ -68,7 +68,7 @@ export default function OverlayNodePanel({ activeNodes, blockHeight, nodeUrls, n
         {/* Footer */}
         <div className="mt-3 pt-3 border-t border-th-border">
           <a
-            href="https://docs.bsvblockchain.org/overlay-services/running-a-node"
+            href="https://hub.bsvblockchain.org/bsv-skills-center/network-topology/overlay-services"
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-orange-500 hover:text-orange-400 transition-colors font-medium"

@@ -37,7 +37,7 @@ export default function OverlayEducation() {
         </p>
         <div className="mt-3">
           <a
-            href="https://docs.bsvblockchain.org/overlay-services/overview"
+            href="https://hub.bsvblockchain.org/bsv-skills-center/network-topology/overlay-services"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-orange-500 hover:text-orange-400 transition-colors font-medium"
